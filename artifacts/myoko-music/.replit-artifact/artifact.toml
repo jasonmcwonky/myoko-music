@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Myoko Music"
+description = "A bold storefront for Myoko Music's affordable music product, with product details, bundle pricing, cart interactions, and a realistic demo checkout that confirms orders without charging."
+version = "1.0.0"
+id = "artifacts/myoko-music"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19562
+
+[services.development]
+run = "pnpm --filter @workspace/myoko-music run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/myoko-music", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/myoko-music/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19562"
+BASE_PATH = "/"
