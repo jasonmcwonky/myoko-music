@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react';
-import { ArrowDown, ArrowRight, Check, ChevronDown, Minus, Plus, ShoppingBag, X } from 'lucide-react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { ArrowDown, ArrowRight, Check, ChevronDown, Gift, ShoppingBag, X } from 'lucide-react';
 import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -8,41 +8,96 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import logoImage from '@assets/myoko-logo.png';
 import releaseImage from '@assets/myoko-release.png';
+import loyaltyImage from '@assets/myoko-loyalty.jpg';
 
-type CartLine = { quantity: number; bundle: boolean };
+type CartLine = { quantity: number };
 type CheckoutForm = { name: string; email: string; country: string; address: string; card: string; expiry: string; cvc: string; billing: string };
+type Offer = { id: string; name: string; quantity: number; price: number; description: string };
 
 const queryClient = new QueryClient();
 const money = (value: number) => `${value.toLocaleString('en-US')} KIP`;
+const offers: Offer[] = [
+  { id: 'special-one', name: 'The Special One Offer', quantity: 1, price: 27000, description: 'One customized keychain, made just for you.' },
+  { id: 'better-together', name: 'The Better Together Offer', quantity: 2, price: 45000, description: 'Keep one. Gift one. Start a tiny movement.' },
+  { id: 'gang', name: 'The Gang Offer', quantity: 4, price: 100000, description: 'A keychain for your whole music-loving crew.' },
+  { id: 'family', name: 'The Family Offer', quantity: 7, price: 167000, description: 'Seven keychains for the people who get your sound.' },
+];
+
+const bestOfferPlan = (quantity: number) => {
+  if (quantity <= 0) return [] as Offer[];
+  const plan = Array.from({ length: quantity + 1 }, () => ({ cost: Number.POSITIVE_INFINITY, offers: [] as Offer[] }));
+  plan[0] = { cost: 0, offers: [] };
+  for (let total = 1; total <= quantity; total += 1) {
+    for (const offer of offers) {
+      if (total < offer.quantity || !Number.isFinite(plan[total - offer.quantity].cost)) continue;
+      const candidateOffers = [...plan[total - offer.quantity].offers, offer];
+      const candidateCost = plan[total - offer.quantity].cost + offer.price;
+      if (candidateCost < plan[total].cost || (candidateCost === plan[total].cost && candidateOffers.length < plan[total].offers.length)) {
+        plan[total] = { cost: candidateCost, offers: candidateOffers };
+      }
+    }
+  }
+  return plan[quantity].offers;
+};
+
+const readStoredNumber = (key: string) => {
+  if (typeof window === 'undefined') return 0;
+  const stored = Number(window.localStorage.getItem(key));
+  return Number.isFinite(stored) && stored >= 0 ? stored : 0;
+};
 
 function Home() {
-  const [cart, setCart] = useState<CartLine>({ quantity: 0, bundle: false });
+  const [cart, setCart] = useState<CartLine>({ quantity: 0 });
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [loyaltyOpen, setLoyaltyOpen] = useState(false);
   const [coupon, setCoupon] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
+  const [loyaltyStamps, setLoyaltyStamps] = useState(() => readStoredNumber('myoko-loyalty-stamps'));
+  const [loyaltyRewardAvailable, setLoyaltyRewardAvailable] = useState(() => typeof window !== 'undefined' && window.localStorage.getItem('myoko-loyalty-reward') === 'true');
+  const [loyaltyApplied, setLoyaltyApplied] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [form, setForm] = useState<CheckoutForm>({ name: '', email: '', country: 'Lao PDR', address: '', card: '', expiry: '', cvc: '', billing: '' });
 
   const quantity = cart.quantity;
-  const subtotal = cart.bundle ? 45000 : quantity * 27000;
+  const offerPlan = bestOfferPlan(quantity);
+  const subtotal = offerPlan.reduce((sum, offer) => sum + offer.price, 0);
   const discount = couponApplied ? 5000 : 0;
-  const total = Math.max(0, subtotal - discount);
+  const loyaltyDiscount = loyaltyApplied ? Math.round(subtotal * 0.3) : 0;
+  const total = Math.max(0, subtotal - discount - loyaltyDiscount);
+  const groupedPlan = offers
+    .map((offer) => ({ offer, count: offerPlan.filter((plannedOffer) => plannedOffer.id === offer.id).length }))
+    .filter(({ count }) => count > 0);
 
-  const addToCart = (bundle = false) => {
-    setCart((current) => bundle
-      ? { quantity: Math.max(2, current.quantity), bundle: true }
-      : { quantity: Math.max(1, current.quantity + 1), bundle: current.bundle && current.quantity + 1 >= 2 });
+  useEffect(() => {
+    window.localStorage.setItem('myoko-loyalty-stamps', String(loyaltyStamps));
+    window.localStorage.setItem('myoko-loyalty-reward', String(loyaltyRewardAvailable));
+  }, [loyaltyRewardAvailable, loyaltyStamps]);
+
+  const addOffer = (offer: Offer) => {
+    setCart((current) => ({ quantity: current.quantity + offer.quantity }));
     setCartOpen(true);
   };
-  const changeQuantity = (amount: number) => setCart((current) => ({ ...current, quantity: Math.max(0, current.quantity + amount), bundle: false }));
+  const clearCart = () => {
+    setCart({ quantity: 0 });
+    setCoupon('');
+    setCouponApplied(false);
+    setLoyaltyApplied(false);
+  };
   const goTo = (id: string) => {
     setMobileMenu(false);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
   const completeCheckout = (event: FormEvent) => {
     event.preventDefault();
+    const nextStamps = loyaltyStamps + quantity;
+    setLoyaltyStamps(nextStamps);
+    if (loyaltyApplied) {
+      setLoyaltyRewardAvailable(false);
+    } else if (nextStamps >= 10) {
+      setLoyaltyRewardAvailable(true);
+    }
     setOrderComplete(true);
   };
   const setField = (field: keyof CheckoutForm, value: string) => setForm((current) => ({ ...current, [field]: value }));
@@ -61,6 +116,9 @@ function Home() {
             <button className="focus-ring font-mono-brand text-[10px] uppercase tracking-[.18em] hover:text-primary" onClick={() => goTo('crew')} data-testid="link-crew">The crew</button>
           </nav>
           <div className="flex items-center gap-3">
+            <button className="focus-ring flex items-center gap-2 border border-foreground px-3 py-2 font-mono-brand text-[10px] uppercase tracking-[.12em] transition hover:bg-foreground hover:text-background" onClick={() => setLoyaltyOpen(true)} aria-label="Open loyalty card" data-testid="button-loyalty">
+              <Gift size={15} strokeWidth={1.8} /> <span className="hidden sm:inline">Loyalty</span>
+            </button>
             <button className="focus-ring relative flex items-center gap-2 border border-foreground px-3 py-2 font-mono-brand text-[10px] uppercase tracking-[.12em] transition hover:bg-foreground hover:text-background" onClick={() => setCartOpen(true)} aria-label={`Open cart with ${quantity} items`} data-testid="button-open-cart">
               <ShoppingBag size={15} strokeWidth={1.8} /> <span className="hidden sm:inline">Bag</span>
               <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] text-primary-foreground" data-testid="text-cart-count">{quantity}</span>
@@ -80,7 +138,7 @@ function Home() {
       <main id="top">
         <section className="relative mx-auto grid min-h-[650px] max-w-[1280px] items-center gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[1.02fr_.98fr] lg:px-12 lg:py-24">
           <div className="relative z-10">
-            <p className="reveal font-mono-brand text-[10px] uppercase tracking-[.25em] text-primary">Independent label / Vientiane, Laos</p>
+            <p className="reveal font-mono-brand text-[10px] uppercase tracking-[.25em] text-primary">MYOKO Music / Vientiane, Laos</p>
             <h1 className="reveal reveal-delay-1 mt-6 max-w-3xl font-display text-[clamp(4rem,10vw,9.3rem)] font-extrabold leading-[.82] tracking-[-.095em]">
               YOUR<br /><span className="text-primary">OWN</span><br />MUSIC.
             </h1>
@@ -100,7 +158,7 @@ function Home() {
               <div className="rounded-full border-[10px] border-primary bg-primary p-2 shadow-[14px_16px_0_rgba(14,13,12,.95)]">
                 <img src={logoImage} alt="Myoko Music record" className="record-spin block aspect-square w-full rounded-full object-cover" />
               </div>
-              <div className="absolute -bottom-5 -left-7 border border-foreground bg-secondary px-4 py-3 font-mono-brand text-[10px] uppercase tracking-[.12em] shadow-[4px_4px_0_rgba(14,13,12,.9)]">Side A<br /><span className="text-primary">Make your own</span></div>
+              <div className="absolute -bottom-5 -left-7 border border-foreground bg-secondary px-4 py-3 font-mono-brand text-[10px] uppercase tracking-[.12em] shadow-[4px_4px_0_rgba(14,13,12,.9)]">Understand it.<br /><span className="text-primary">Make your own music.</span></div>
             </div>
             <div className="absolute bottom-2 left-0 hidden w-40 rotate-[-7deg] border border-foreground bg-accent p-4 text-primary-foreground sm:block">
               <p className="font-mono-brand text-[9px] uppercase leading-relaxed tracking-[.12em]">A tiny label<br />with a loud point<br />of view.</p>
@@ -133,44 +191,46 @@ function Home() {
                   </div>
                 </div>
                 <div className="flex items-end justify-between gap-4 border-t border-background/20 pt-5">
-                  <div><p className="font-display text-2xl font-bold">Myoko / 001</p><p className="mt-1 font-mono-brand text-[10px] uppercase tracking-[.15em] text-background/50">A record for right now</p></div>
-                  <span className="font-mono-brand text-[10px] text-secondary">33⅓ RPM</span>
+                  <div><p className="font-display text-2xl font-bold">Music Keychains</p><p className="mt-1 font-mono-brand text-[10px] uppercase tracking-[.15em] text-background/50">Order your favorite album now!!!</p></div>
                 </div>
               </div>
               <div className="flex flex-col gap-5">
                 <div className="bg-secondary p-6 text-foreground sm:p-8">
-                  <div className="flex items-start justify-between"><span className="font-mono-brand text-[10px] uppercase tracking-[.18em]">One record</span><span className="font-display text-4xl font-bold">01</span></div>
-                  <h3 className="mt-12 font-display text-3xl font-bold leading-tight tracking-[-.05em]">Your sound.<br />Your rules.</h3>
-                  <p className="mt-4 max-w-xs text-sm leading-relaxed text-foreground/65">A physical reminder that the best version of your taste is the one nobody can copy.</p>
-                  <button className="focus-ring mt-7 flex w-full items-center justify-between border border-foreground bg-foreground px-4 py-3 font-mono-brand text-[10px] uppercase tracking-[.15em] text-background transition hover:bg-primary" onClick={() => addToCart(false)} data-testid="button-add-single">Add to bag <ArrowRight size={15} /></button>
+                  <div className="flex items-start justify-between"><span className="font-mono-brand text-[10px] uppercase tracking-[.18em]">Offers, not loose keychains</span><span className="font-display text-4xl font-bold">04</span></div>
+                  <h3 className="mt-10 font-display text-3xl font-bold leading-tight tracking-[-.05em]">Pick a stack.<br />We find the best value.</h3>
+                  <p className="mt-4 max-w-xs text-sm leading-relaxed text-foreground/65">Every order is built from these offers. Add any combination and we automatically choose the lowest-cost way to reach your keychain count.</p>
                 </div>
-                <button className="focus-ring group flex flex-1 flex-col justify-between border border-background/30 p-6 text-left transition hover:border-secondary hover:bg-background/5 sm:p-8" onClick={() => addToCart(true)} data-testid="button-add-bundle">
-                  <div className="flex items-center justify-between"><span className="font-mono-brand text-[10px] uppercase tracking-[.18em] text-secondary">The better together offer</span><ArrowRight size={18} className="transition-transform group-hover:translate-x-1" /></div>
-                  <div><p className="mt-12 font-display text-3xl font-bold tracking-[-.05em]">Two for <span className="text-secondary">45,000</span></p><p className="mt-2 text-sm text-background/55">Keep one. Gift one. Start a tiny movement.</p></div>
-                </button>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {offers.map((offer, index) => (
+                    <button key={offer.id} className="focus-ring group flex min-h-44 flex-col justify-between border border-background/30 p-5 text-left transition hover:border-secondary hover:bg-background/5" onClick={() => addOffer(offer)} data-testid={`button-add-offer-${offer.id}`}>
+                      <div className="flex items-start justify-between gap-3"><span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">{offer.name}</span><span className="font-mono-brand text-[9px] text-background/45">0{index + 1}</span></div>
+                      <div><p className="mt-6 font-display text-2xl font-bold tracking-[-.05em]">{offer.quantity} {offer.quantity === 1 ? 'Keychain' : 'Keychains'}</p><p className="mt-1 font-mono-brand text-xs text-secondary">{money(offer.price)}</p><p className="mt-3 text-xs leading-relaxed text-background/55">{offer.description}</p></div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
             <div className="mt-8 grid grid-cols-2 gap-3 border-t border-background/20 pt-6 text-background/55 sm:grid-cols-4">
-              {['Locally packed', 'Student-led', 'Small-batch drop', 'No loud markup'].map((text, i) => <div key={text} className="flex items-center gap-2 font-mono-brand text-[9px] uppercase tracking-[.12em]"><span className="text-secondary">0{i + 1}</span>{text}</div>)}
+              {['Locally packed with care', 'Personalized', 'Affordable with great quality', '90 days money-back guranteed'].map((text, i) => <div key={text} className="flex items-center gap-2 font-mono-brand text-[9px] uppercase tracking-[.12em]"><span className="text-secondary">0{i + 1}</span>{text}</div>)}
             </div>
           </div>
         </section>
 
         <section id="story" className="mx-auto grid max-w-[1280px] gap-12 px-5 py-24 sm:px-8 lg:grid-cols-[.75fr_1.25fr] lg:px-12 lg:py-36">
-          <div><p className="font-mono-brand text-[10px] uppercase tracking-[.24em] text-primary">02 / Our sound</p><div className="mt-8 h-32 w-32 rounded-full border border-foreground bg-secondary p-3"><img src={logoImage} alt="" className="record-spin h-full w-full rounded-full object-cover" /></div></div>
+          <div><p className="font-mono-brand text-[10px] uppercase tracking-[.24em] text-primary">02 / The Origin </p><div className="mt-8 h-32 w-32 rounded-full border border-foreground bg-secondary p-3"><img src={logoImage} alt="" className="record-spin h-full w-full rounded-full object-cover" /></div></div>
           <div>
-            <h2 className="max-w-3xl font-display text-5xl font-bold leading-[.95] tracking-[-.07em] sm:text-7xl">Not a playlist.<br /><span className="text-primary">A point of view.</span></h2>
+            <h2 className="max-w-3xl font-display text-5xl font-bold leading-[.95] tracking-[-.07em] sm:text-7xl">How We<br /><span className="text-primary">Started.</span></h2>
             <div className="mt-10 grid gap-8 sm:grid-cols-2">
-              <p className="text-base leading-relaxed text-foreground/70">Myoko Music started with a simple question: what if a small music product felt as personal as the song you play when nobody is watching? We are a student-built label making room for individual taste.</p>
-              <p className="text-base leading-relaxed text-foreground/70">The name is a nod to “Make Your Own Kind of Music” — not as a slogan, but as a dare. Keep the strange idea. Turn it up. Share it with someone who gets it.</p>
+              <p className="text-base leading-relaxed text-foreground/70">Myoko Music started with a simple question: what if a aesthetically pleasing keychain felt as personal as the song you play when nobody is watching? 1 question turned into 5 great individuals who understood the problem and found the best possible solution ever. We are a student-built label making room for individual taste and preferences.</p>
+              <p className="text-base leading-relaxed text-foreground/70">The name is a nod to “Make Your Own Kind of Music” by Mama Cass — which is our slogan, which we do exactly that. Spread the words of aesthetic and music combined with our customized keychains.</p>
             </div>
-            <div className="mt-12 border-l-2 border-primary pl-5"><p className="font-display text-2xl font-semibold leading-tight tracking-[-.03em]">“There is no wrong way to press play.”</p><p className="mt-2 font-mono-brand text-[9px] uppercase tracking-[.15em] text-foreground/50">— Myoko, liner notes</p></div>
+            <div className="mt-12 border-l-2 border-primary pl-5"><p className="font-display text-2xl font-semibold leading-tight tracking-[-.03em]">“There is no wrong way to press play. Express Yourself.”</p><p className="mt-2 font-mono-brand text-[9px] uppercase tracking-[.15em] text-foreground/50">— Myoko, Jason</p></div>
           </div>
         </section>
 
         <section id="crew" className="border-y border-foreground bg-secondary px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
           <div className="mx-auto max-w-[1280px]">
-            <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.24em]">03 / The crew</p><h2 className="mt-4 font-display text-5xl font-bold leading-[.9] tracking-[-.07em] sm:text-7xl">Four people.<br />One <span className="text-primary">frequency.</span></h2></div><p className="max-w-xs text-sm leading-relaxed text-foreground/65">The humans behind the label, the packing tape, and the very opinionated group chat.</p></div>
+            <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.24em]">03 / The Team</p><h2 className="mt-4 font-display text-5xl font-bold leading-[.9] tracking-[-.07em] sm:text-7xl">Four people.<br />One <span className="text-primary">Mission.</span></h2></div><p className="max-w-xs text-sm leading-relaxed text-foreground/65">The humans behind the label, The production, Organization and the care behind the business.</p></div>
             <div className="mt-14 grid gap-px border border-foreground bg-foreground sm:grid-cols-2 lg:grid-cols-4">
               {[
                 ['01', 'New', 'CEO & Founder', 'Keeps the needle moving.'],
@@ -185,7 +245,7 @@ function Home() {
         <section className="bg-primary px-5 py-24 text-primary-foreground sm:px-8 lg:px-12 lg:py-32">
           <div className="mx-auto grid max-w-[1280px] items-end gap-10 lg:grid-cols-[1fr_.65fr]">
             <div><p className="font-mono-brand text-[10px] uppercase tracking-[.24em] text-secondary">04 / Take it home</p><h2 className="mt-5 max-w-4xl font-display text-[clamp(3.5rem,8vw,8rem)] font-extrabold leading-[.82] tracking-[-.1em]">MAKE<br />SOME<br /><span className="text-secondary">NOISE.</span></h2></div>
-            <div><p className="max-w-sm text-base leading-relaxed text-primary-foreground/75">The first Myoko drop is ready for your desk, your bag, your friend who always sends the best songs.</p><button className="focus-ring mt-8 flex items-center gap-4 border border-primary-foreground px-5 py-4 font-mono-brand text-[10px] uppercase tracking-[.17em] transition hover:bg-primary-foreground hover:text-primary" onClick={() => addToCart(true)} data-testid="button-final-order">Order the bundle <ArrowRight size={16} /></button></div>
+            <div><p className="max-w-sm text-base leading-relaxed text-primary-foreground/75">The first Myoko drop is ready for your desk, your bag, your friend who always sends the best songs.</p><button className="focus-ring mt-8 flex items-center gap-4 border border-primary-foreground px-5 py-4 font-mono-brand text-[10px] uppercase tracking-[.17em] transition hover:bg-primary-foreground hover:text-primary" onClick={() => goTo('listen')} data-testid="button-final-offers">See all offers <ArrowRight size={16} /></button></div>
           </div>
         </section>
       </main>
@@ -200,13 +260,14 @@ function Home() {
 
       {cartOpen && <div className="fixed inset-0 z-50 flex justify-end bg-foreground/45" role="dialog" aria-modal="true" aria-label="Shopping bag">
         <div className="flex h-full w-full max-w-md flex-col bg-background shadow-[-18px_0_40px_rgba(0,0,0,.18)]">
-          <div className="flex items-center justify-between border-b border-foreground/20 px-6 py-5"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.2em] text-primary">Your bag</p><h2 className="mt-1 font-display text-3xl font-bold tracking-[-.06em]">Ready to play.</h2></div><button className="focus-ring p-2" onClick={() => setCartOpen(false)} aria-label="Close shopping bag" data-testid="button-close-cart"><X size={20} /></button></div>
+           <div className="flex items-center justify-between border-b border-foreground/20 px-6 py-5"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.2em] text-primary">Your bag</p><h2 className="mt-1 font-display text-3xl font-bold tracking-[-.06em]">Ready to play.</h2></div><button className="focus-ring p-2" onClick={() => { setCartOpen(false); clearCart(); }} aria-label="Close shopping bag and clear it" data-testid="button-close-cart"><X size={20} /></button></div>
           <div className="flex-1 overflow-y-auto px-6 py-7">
-            {quantity === 0 ? <div className="flex h-full flex-col items-center justify-center text-center"><div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-foreground"><ShoppingBag size={22} /></div><h3 className="font-display text-2xl font-bold">The bag is quiet.</h3><p className="mt-2 max-w-xs text-sm text-foreground/55">Add a record and give it something to say.</p><button className="focus-ring mt-7 bg-primary px-5 py-3 font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary-foreground" onClick={() => { setCartOpen(false); goTo('listen'); }} data-testid="button-empty-shop">Browse the release</button></div> : <div>
-              <div className="flex gap-4 border-b border-foreground/15 pb-6"><img src={releaseImage} alt="Myoko Music release" className="h-20 w-20 rounded-[4px] object-cover" /><div className="flex flex-1 justify-between"><div><h3 className="font-display text-xl font-bold">Myoko / 001</h3><p className="mt-1 font-mono-brand text-[9px] uppercase tracking-[.13em] text-foreground/50">{cart.bundle ? 'Bundle offer' : 'Single release'}</p></div><p className="font-mono-brand text-xs">{money(cart.bundle ? 45000 : 27000)}</p></div></div>
-              <div className="flex items-center justify-between border-b border-foreground/15 py-5"><span className="font-mono-brand text-[10px] uppercase tracking-[.15em]">Quantity</span><div className="flex items-center gap-3"><button className="focus-ring border border-foreground p-1" onClick={() => changeQuantity(-1)} aria-label="Decrease quantity" data-testid="button-decrease-quantity"><Minus size={14} /></button><span className="w-5 text-center font-mono-brand text-xs" data-testid="text-item-quantity">{quantity}</span><button className="focus-ring border border-foreground p-1" onClick={() => changeQuantity(1)} aria-label="Increase quantity" data-testid="button-increase-quantity"><Plus size={14} /></button></div></div>
-              <div className="border-b border-foreground/15 py-5"><label htmlFor="coupon" className="font-mono-brand text-[10px] uppercase tracking-[.15em]">Coupon code</label><div className="mt-3 flex gap-2"><input id="coupon" value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="MYOKO5K" className="focus-ring min-w-0 flex-1 border border-foreground bg-transparent px-3 py-2 font-mono-brand text-xs uppercase outline-none" data-testid="input-coupon" /><button className="focus-ring border border-foreground px-3 py-2 font-mono-brand text-[10px] uppercase tracking-[.1em] hover:bg-foreground hover:text-background" onClick={() => setCouponApplied(coupon.trim().toUpperCase() === 'MYOKO5K')} data-testid="button-apply-coupon">Apply</button></div>{couponApplied && <p className="mt-2 flex items-center gap-1 text-xs text-accent"><Check size={13} /> 5,000 KIP taken off.</p>}</div>
-              <div className="space-y-3 pt-6 text-sm"><div className="flex justify-between"><span className="text-foreground/55">Subtotal</span><span data-testid="text-subtotal">{money(subtotal)}</span></div>{couponApplied && <div className="flex justify-between text-accent"><span>Coupon</span><span>-{money(discount)}</span></div>}<div className="flex justify-between border-t border-foreground/20 pt-4 font-display text-xl font-bold"><span>Total</span><span data-testid="text-cart-total">{money(total)}</span></div></div>
+             {quantity === 0 ? <div className="flex h-full flex-col items-center justify-center text-center"><div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-foreground"><ShoppingBag size={22} /></div><h3 className="font-display text-2xl font-bold">The bag is quiet.</h3><p className="mt-2 max-w-xs text-sm text-foreground/55">Choose an offer and give it something to say.</p><button className="focus-ring mt-7 bg-primary px-5 py-3 font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary-foreground" onClick={() => { setCartOpen(false); goTo('listen'); }} data-testid="button-empty-shop">Browse the offers</button></div> : <div>
+               <div className="flex gap-4 border-b border-foreground/15 pb-6"><img src={releaseImage} alt="Myoko Music release" className="h-20 w-20 rounded-[4px] object-cover" /><div className="flex flex-1 justify-between"><div><h3 className="font-display text-xl font-bold">Your offer stack</h3><p className="mt-1 font-mono-brand text-[9px] uppercase tracking-[.13em] text-foreground/50">{quantity} keychains / best value</p></div><p className="font-mono-brand text-xs">{money(subtotal)}</p></div></div>
+               <div className="border-b border-foreground/15 py-5"><div className="flex items-center justify-between"><span className="font-mono-brand text-[10px] uppercase tracking-[.15em]">Best offer combination</span><span className="font-mono-brand text-xs text-primary" data-testid="text-item-quantity">{quantity} keychains</span></div><div className="mt-4 space-y-3">{groupedPlan.map(({ offer, count }) => <div key={offer.id} className="flex items-center justify-between text-sm"><span>{count} × {offer.name}</span><span className="font-mono-brand text-xs">{money(offer.price * count)}</span></div>)}</div><p className="mt-4 text-xs leading-relaxed text-foreground/55">We automatically combine offers so you never pay more than necessary.</p></div>
+               <div className="border-b border-foreground/15 py-5"><label htmlFor="coupon" className="font-mono-brand text-[10px] uppercase tracking-[.15em]">Coupon code</label><div className="mt-3 flex gap-2"><input id="coupon" value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="MYOKO5K" className="focus-ring min-w-0 flex-1 border border-foreground bg-transparent px-3 py-2 font-mono-brand text-xs uppercase outline-none" data-testid="input-coupon" /><button className="focus-ring border border-foreground px-3 py-2 font-mono-brand text-[10px] uppercase tracking-[.1em] hover:bg-foreground hover:text-background" onClick={() => setCouponApplied(coupon.trim().toUpperCase() === 'MYOKO5K')} data-testid="button-apply-coupon">Apply</button></div>{couponApplied && <p className="mt-2 flex items-center gap-1 text-xs text-accent"><Check size={13} /> 5,000 KIP taken off.</p>}</div>
+               {loyaltyRewardAvailable && <div className="border-b border-foreground/15 py-5"><div className="flex items-start justify-between gap-4"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary">Loyalty reward unlocked</p><p className="mt-2 text-sm leading-relaxed text-foreground/70">Free keychain + 30% off this new order.</p></div><button className={`focus-ring shrink-0 border px-3 py-2 font-mono-brand text-[9px] uppercase tracking-[.1em] ${loyaltyApplied ? 'border-primary bg-primary text-primary-foreground' : 'border-foreground hover:bg-foreground hover:text-background'}`} onClick={() => setLoyaltyApplied((applied) => !applied)} data-testid="button-apply-loyalty">{loyaltyApplied ? 'Applied' : 'Use reward'}</button></div>{loyaltyApplied && <p className="mt-3 flex items-center gap-1 text-xs text-accent"><Check size={13} /> One free keychain added. 30% taken off.</p>}</div>}
+               <div className="space-y-3 pt-6 text-sm"><div className="flex justify-between"><span className="text-foreground/55">Subtotal</span><span data-testid="text-subtotal">{money(subtotal)}</span></div>{couponApplied && <div className="flex justify-between text-accent"><span>Coupon</span><span>-{money(discount)}</span></div>}{loyaltyApplied && <div className="flex justify-between text-accent"><span>Loyalty reward</span><span>-{money(loyaltyDiscount)}</span></div>}{loyaltyApplied && <div className="flex justify-between text-foreground/55"><span>Keychains included</span><span>{quantity + 1}</span></div>}<div className="flex justify-between border-t border-foreground/20 pt-4 font-display text-xl font-bold"><span>Total</span><span data-testid="text-cart-total">{money(total)}</span></div></div>
             </div>}
           </div>
           {quantity > 0 && <div className="border-t border-foreground/20 px-6 py-6"><p className="mb-4 text-center font-mono-brand text-[9px] uppercase tracking-[.12em] text-foreground/50">Checkout is a demo — no payment will be charged</p><button className="focus-ring flex w-full items-center justify-center gap-3 bg-primary px-5 py-4 font-mono-brand text-[11px] uppercase tracking-[.15em] text-primary-foreground transition hover:bg-accent" onClick={() => { setCartOpen(false); setCheckoutOpen(true); }} data-testid="button-checkout">Continue to demo checkout <ArrowRight size={15} /></button></div>}
@@ -215,8 +276,8 @@ function Home() {
 
       {checkoutOpen && <div className="fixed inset-0 z-[60] overflow-y-auto bg-foreground/60 px-4 py-6 sm:px-8 sm:py-12" role="dialog" aria-modal="true" aria-label="Demo checkout">
         <div className="mx-auto max-w-3xl bg-background">
-          {orderComplete ? <div className="flex min-h-[550px] flex-col items-center justify-center px-6 py-16 text-center sm:px-16"><div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent text-background"><Check size={38} strokeWidth={2} /></div><p className="mt-8 font-mono-brand text-[10px] uppercase tracking-[.22em] text-primary">Thank you for backing small music</p><h2 className="mt-4 font-display text-5xl font-bold leading-[.9] tracking-[-.08em] sm:text-7xl">Your order<br /><span className="text-primary">is complete.</span></h2><p className="mt-6 max-w-md text-sm leading-relaxed text-foreground/60">This was a demonstration checkout. No payment was processed and no real order was created.</p><div className="mt-8 border border-foreground px-5 py-3 font-mono-brand text-xs tracking-[.12em]" data-testid="text-order-reference">ORDER REF / MYK-{Math.floor(1000 + Math.random() * 8999)}</div><button className="focus-ring mt-8 flex items-center gap-3 border border-foreground px-5 py-3 font-mono-brand text-[10px] uppercase tracking-[.14em] hover:bg-foreground hover:text-background" onClick={() => { setCheckoutOpen(false); setOrderComplete(false); setCart({ quantity: 0, bundle: false }); }} data-testid="button-close-confirmation">Back to Myoko <ArrowRight size={14} /></button></div> : <form onSubmit={completeCheckout} className="p-6 sm:p-10">
-            <div className="flex items-start justify-between border-b border-foreground/20 pb-7"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.2em] text-primary">Demo checkout</p><h2 className="mt-2 font-display text-4xl font-bold tracking-[-.07em]">Make it yours.</h2><p className="mt-2 max-w-md text-sm text-foreground/60">A safe preview of the Myoko checkout. This form never charges your card.</p></div><button type="button" className="focus-ring p-2" onClick={() => setCheckoutOpen(false)} aria-label="Close checkout" data-testid="button-close-checkout"><X size={20} /></button></div>
+          {orderComplete ? <div className="flex min-h-[550px] flex-col items-center justify-center px-6 py-16 text-center sm:px-16"><div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent text-background"><Check size={38} strokeWidth={2} /></div><p className="mt-8 font-mono-brand text-[10px] uppercase tracking-[.22em] text-primary">Thank you for backing small music</p><h2 className="mt-4 font-display text-5xl font-bold leading-[.9] tracking-[-.08em] sm:text-7xl">Your order<br /><span className="text-primary">is complete.</span></h2><p className="mt-6 max-w-md text-sm leading-relaxed text-foreground/60">This was a demonstration checkout. No payment was processed and no real order was created.</p><div className="mt-8 border border-foreground px-5 py-3 font-mono-brand text-xs tracking-[.12em]" data-testid="text-order-reference">ORDER REF / MYK-{Math.floor(1000 + Math.random() * 8999)}</div><button className="focus-ring mt-8 flex items-center gap-3 border border-foreground px-5 py-3 font-mono-brand text-[10px] uppercase tracking-[.14em] hover:bg-foreground hover:text-background" onClick={() => { setCheckoutOpen(false); setOrderComplete(false); clearCart(); }} data-testid="button-close-confirmation">Back to Myoko <ArrowRight size={14} /></button></div> : <form onSubmit={completeCheckout} className="p-6 sm:p-10">
+            <div className="flex items-start justify-between border-b border-foreground/20 pb-7"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.2em] text-primary">Demo checkout</p><h2 className="mt-2 font-display text-4xl font-bold tracking-[-.07em]">Make it yours.</h2><p className="mt-2 max-w-md text-sm text-foreground/60">A safe preview of the Myoko checkout. This form never charges your card. Closing this window clears the bag.</p></div><button type="button" className="focus-ring p-2" onClick={() => { setCheckoutOpen(false); clearCart(); }} aria-label="Close checkout and clear it" data-testid="button-close-checkout"><X size={20} /></button></div>
             <div className="mt-8 grid gap-x-6 gap-y-5 sm:grid-cols-2">
               <label className="sm:col-span-2"><span className="form-label">Full name</span><input required value={form.name} onChange={(e) => setField('name', e.target.value)} className="form-input" placeholder="Your name" data-testid="input-checkout-name" /></label>
               <label><span className="form-label">Email address</span><input required type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} className="form-input" placeholder="you@example.com" data-testid="input-checkout-email" /></label>
@@ -226,6 +287,19 @@ function Home() {
             <div className="mt-9 border-t border-foreground/20 pt-7"><div className="flex items-center justify-between"><h3 className="font-display text-2xl font-bold tracking-[-.05em]">Payment details</h3><span className="font-mono-brand text-[9px] uppercase tracking-[.12em] text-foreground/45">Demo only</span></div><div className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2"><label className="sm:col-span-2"><span className="form-label">Card number</span><input required inputMode="numeric" value={form.card} onChange={(e) => setField('card', e.target.value)} className="form-input font-mono-brand" placeholder="0000 0000 0000 0000" data-testid="input-checkout-card" /></label><label><span className="form-label">Expiry</span><input required value={form.expiry} onChange={(e) => setField('expiry', e.target.value)} className="form-input font-mono-brand" placeholder="MM / YY" data-testid="input-checkout-expiry" /></label><label><span className="form-label">CVC</span><input required inputMode="numeric" value={form.cvc} onChange={(e) => setField('cvc', e.target.value)} className="form-input font-mono-brand" placeholder="000" data-testid="input-checkout-cvc" /></label><label className="sm:col-span-2"><span className="form-label">Billing details</span><textarea required value={form.billing} onChange={(e) => setField('billing', e.target.value)} className="form-input min-h-20 resize-y" placeholder="Billing address or notes" data-testid="input-checkout-billing" /></label></div></div>
             <div className="mt-8 flex flex-col-reverse items-stretch justify-between gap-4 border-t border-foreground/20 pt-6 sm:flex-row sm:items-center"><p className="font-mono-brand text-[10px] uppercase tracking-[.12em] text-foreground/50">Total today <strong className="ml-2 text-foreground">{money(total)}</strong></p><button type="submit" className="focus-ring flex items-center justify-center gap-3 bg-primary px-6 py-4 font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary-foreground hover:bg-accent" data-testid="button-submit-checkout">Place demo order <ArrowRight size={15} /></button></div>
           </form>}
+        </div>
+      </div>}
+
+      {loyaltyOpen && <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-foreground/60 px-4 py-6 sm:px-8" role="dialog" aria-modal="true" aria-label="Myoko loyalty card">
+        <div className="w-full max-w-2xl bg-background shadow-[12px_12px_0_rgba(14,13,12,.95)]">
+          <div className="flex items-start justify-between border-b border-foreground/20 px-6 py-5 sm:px-8"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.2em] text-primary">Myoko rewards</p><h2 className="mt-1 font-display text-3xl font-bold tracking-[-.06em]">Keep the music going.</h2></div><button className="focus-ring p-2" onClick={() => setLoyaltyOpen(false)} aria-label="Close loyalty card" data-testid="button-close-loyalty"><X size={20} /></button></div>
+          <div className="grid gap-7 p-6 sm:p-8 md:grid-cols-[1.1fr_.9fr]">
+            <div><img src={loyaltyImage} alt="Myoko Music loyalty card with ten stamp circles" className="w-full rounded-[4px] border border-foreground/20 object-cover" /><p className="mt-3 font-mono-brand text-[9px] uppercase tracking-[.12em] text-foreground/50">Your progress never resets.</p></div>
+            <div className="flex flex-col justify-between">
+              <div><div className="flex items-end justify-between"><span className="font-mono-brand text-[10px] uppercase tracking-[.15em]">Your stamps</span><span className="font-display text-4xl font-bold text-primary" data-testid="text-loyalty-stamps">{Math.min(loyaltyStamps, 10)}<span className="text-foreground/30">/10</span></span></div><div className="mt-4 grid grid-cols-5 gap-2">{Array.from({ length: 10 }, (_, index) => <span key={index} className={`flex aspect-square items-center justify-center rounded-full border border-foreground font-mono-brand text-[9px] ${index < loyaltyStamps ? 'bg-primary text-primary-foreground' : 'bg-transparent text-foreground/35'}`}>{index + 1}</span>)}</div><p className="mt-5 text-sm leading-relaxed text-foreground/65">{loyaltyRewardAvailable ? 'Your reward is ready: apply it to a new order for one free keychain and 30% off.' : `${Math.max(0, 10 - loyaltyStamps)} more ${10 - loyaltyStamps === 1 ? 'keychain' : 'keychains'} until your free keychain and 30% off reward unlocks.`}</p></div>
+              <div className="mt-8 border-t border-foreground/15 pt-5"><p className="font-mono-brand text-[9px] uppercase tracking-[.12em] text-foreground/50">How it works</p><p className="mt-2 text-sm leading-relaxed text-foreground/70">Every completed website order adds its keychains forever. At ten, your reward stays available until you choose to use it on a future order.</p><button className="focus-ring mt-5 flex items-center gap-3 border border-foreground px-4 py-3 font-mono-brand text-[10px] uppercase tracking-[.14em] hover:bg-foreground hover:text-background" onClick={() => setLoyaltyOpen(false)} data-testid="button-close-loyalty-note">Keep listening <ArrowRight size={14} /></button></div>
+            </div>
+          </div>
         </div>
       </div>}
     </div>
