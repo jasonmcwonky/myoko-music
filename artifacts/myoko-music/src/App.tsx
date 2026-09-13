@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import logoImage from '@assets/myoko-logo.png';
+import releaseImage from '@assets/myoko-release.png';
 
 type CartLine = { quantity: number; bundle: boolean };
 type CheckoutForm = { name: string; email: string; country: string; address: string; card: string; expiry: string; cvc: string; billing: string };
@@ -81,11 +82,11 @@ function Home() {
           <div className="relative z-10">
             <p className="reveal font-mono-brand text-[10px] uppercase tracking-[.25em] text-primary">Independent label / Vientiane, Laos</p>
             <h1 className="reveal reveal-delay-1 mt-6 max-w-3xl font-display text-[clamp(4rem,10vw,9.3rem)] font-extrabold leading-[.82] tracking-[-.095em]">
-              YOUR<br /><span className="text-primary">OWN</span><br />KIND.
+              YOUR<br /><span className="text-primary">OWN</span><br />MUSIC.
             </h1>
             <div className="reveal reveal-delay-2 mt-8 flex max-w-lg items-start gap-5">
               <div className="mt-2 h-px w-12 shrink-0 bg-foreground" />
-              <p className="text-balance text-base leading-relaxed text-foreground/70">Music for people who refuse to sound like everyone else. One small record, made to put a little more you into the room.</p>
+              <p className="text-balance text-base leading-relaxed text-foreground/70">Keychains filled with your favorite music, endorsed with the feelings you love. Customized NFC sheet music keychains.</p>
             </div>
             <div className="reveal reveal-delay-3 mt-9 flex flex-wrap items-center gap-4">
               <button className="focus-ring hard-shadow group flex items-center gap-3 bg-primary px-5 py-3 font-mono-brand text-[11px] uppercase tracking-[.16em] text-primary-foreground transition hover:translate-x-1 hover:translate-y-1 hover:shadow-none" onClick={() => goTo('listen')} data-testid="button-hero-shop">Find your sound <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" /></button>
@@ -117,18 +118,18 @@ function Home() {
           <div className="mx-auto max-w-[1280px]">
             <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
               <div>
-                <p className="font-mono-brand text-[10px] uppercase tracking-[.24em] text-secondary">01 / The release</p>
-                <h2 className="mt-4 max-w-2xl font-display text-5xl font-bold leading-[.92] tracking-[-.07em] sm:text-7xl">Put a little<br /><span className="text-primary">you</span> on it.</h2>
+                <p className="font-mono-brand text-[10px] uppercase tracking-[.24em] text-secondary">01 / Shop</p>
+                <h2 className="mt-4 max-w-2xl font-display text-5xl font-bold leading-[.92] tracking-[-.07em] sm:text-7xl">Listen to it<br /><span className="text-primary">your</span> own way.</h2>
               </div>
-              <p className="max-w-xs text-sm leading-relaxed text-background/60">A pocket-sized music drop for the days that need their own soundtrack. Affordable by design. Impossible to ignore.</p>
+              <p className="max-w-xs text-sm leading-relaxed text-background/60">A pocket-sized music keychain for the days that you need them. Affordable by design. Impossible to ignore.</p>
             </div>
             <div className="mt-14 grid gap-7 lg:grid-cols-[1.2fr_.8fr]">
               <div className="relative overflow-hidden border border-background/25 bg-[#171615] p-5 sm:p-8">
                 <div className="absolute right-7 top-7 font-mono-brand text-[9px] uppercase tracking-[.18em] text-background/40">MYK-001 / 2025</div>
-                <div className="flex min-h-[390px] items-center justify-center">
-                  <div className="relative w-[min(67vw,350px)]">
-                    <div className="absolute inset-0 translate-x-5 translate-y-5 rounded-full border border-primary/50 bg-primary/20" />
-                    <img src={logoImage} alt="Myoko Music release artwork" className="relative aspect-square w-full rounded-full object-cover shadow-[0_0_0_11px_#b93c3c,0_0_0_12px_#171615]" />
+                  <div className="flex min-h-[390px] items-center justify-center">
+                  <div className="relative w-[min(78vw,440px)]">
+                    <div className="absolute inset-0 translate-x-5 translate-y-5 rounded-[4px] border border-primary/50 bg-primary/20" />
+                    <img src={releaseImage} alt="Myoko Music release artwork" className="relative block w-full rounded-[4px] object-contain shadow-[0_0_0_11px_#b93c3c,0_0_0_12px_#171615]" />
                   </div>
                 </div>
                 <div className="flex items-end justify-between gap-4 border-t border-background/20 pt-5">
@@ -202,7 +203,7 @@ function Home() {
           <div className="flex items-center justify-between border-b border-foreground/20 px-6 py-5"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.2em] text-primary">Your bag</p><h2 className="mt-1 font-display text-3xl font-bold tracking-[-.06em]">Ready to play.</h2></div><button className="focus-ring p-2" onClick={() => setCartOpen(false)} aria-label="Close shopping bag" data-testid="button-close-cart"><X size={20} /></button></div>
           <div className="flex-1 overflow-y-auto px-6 py-7">
             {quantity === 0 ? <div className="flex h-full flex-col items-center justify-center text-center"><div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-foreground"><ShoppingBag size={22} /></div><h3 className="font-display text-2xl font-bold">The bag is quiet.</h3><p className="mt-2 max-w-xs text-sm text-foreground/55">Add a record and give it something to say.</p><button className="focus-ring mt-7 bg-primary px-5 py-3 font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary-foreground" onClick={() => { setCartOpen(false); goTo('listen'); }} data-testid="button-empty-shop">Browse the release</button></div> : <div>
-              <div className="flex gap-4 border-b border-foreground/15 pb-6"><img src={logoImage} alt="Myoko Music release" className="h-20 w-20 rounded-full object-cover" /><div className="flex flex-1 justify-between"><div><h3 className="font-display text-xl font-bold">Myoko / 001</h3><p className="mt-1 font-mono-brand text-[9px] uppercase tracking-[.13em] text-foreground/50">{cart.bundle ? 'Bundle offer' : 'Single release'}</p></div><p className="font-mono-brand text-xs">{money(cart.bundle ? 45000 : 27000)}</p></div></div>
+              <div className="flex gap-4 border-b border-foreground/15 pb-6"><img src={releaseImage} alt="Myoko Music release" className="h-20 w-20 rounded-[4px] object-cover" /><div className="flex flex-1 justify-between"><div><h3 className="font-display text-xl font-bold">Myoko / 001</h3><p className="mt-1 font-mono-brand text-[9px] uppercase tracking-[.13em] text-foreground/50">{cart.bundle ? 'Bundle offer' : 'Single release'}</p></div><p className="font-mono-brand text-xs">{money(cart.bundle ? 45000 : 27000)}</p></div></div>
               <div className="flex items-center justify-between border-b border-foreground/15 py-5"><span className="font-mono-brand text-[10px] uppercase tracking-[.15em]">Quantity</span><div className="flex items-center gap-3"><button className="focus-ring border border-foreground p-1" onClick={() => changeQuantity(-1)} aria-label="Decrease quantity" data-testid="button-decrease-quantity"><Minus size={14} /></button><span className="w-5 text-center font-mono-brand text-xs" data-testid="text-item-quantity">{quantity}</span><button className="focus-ring border border-foreground p-1" onClick={() => changeQuantity(1)} aria-label="Increase quantity" data-testid="button-increase-quantity"><Plus size={14} /></button></div></div>
               <div className="border-b border-foreground/15 py-5"><label htmlFor="coupon" className="font-mono-brand text-[10px] uppercase tracking-[.15em]">Coupon code</label><div className="mt-3 flex gap-2"><input id="coupon" value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="MYOKO5K" className="focus-ring min-w-0 flex-1 border border-foreground bg-transparent px-3 py-2 font-mono-brand text-xs uppercase outline-none" data-testid="input-coupon" /><button className="focus-ring border border-foreground px-3 py-2 font-mono-brand text-[10px] uppercase tracking-[.1em] hover:bg-foreground hover:text-background" onClick={() => setCouponApplied(coupon.trim().toUpperCase() === 'MYOKO5K')} data-testid="button-apply-coupon">Apply</button></div>{couponApplied && <p className="mt-2 flex items-center gap-1 text-xs text-accent"><Check size={13} /> 5,000 KIP taken off.</p>}</div>
               <div className="space-y-3 pt-6 text-sm"><div className="flex justify-between"><span className="text-foreground/55">Subtotal</span><span data-testid="text-subtotal">{money(subtotal)}</span></div>{couponApplied && <div className="flex justify-between text-accent"><span>Coupon</span><span>-{money(discount)}</span></div>}<div className="flex justify-between border-t border-foreground/20 pt-4 font-display text-xl font-bold"><span>Total</span><span data-testid="text-cart-total">{money(total)}</span></div></div>
