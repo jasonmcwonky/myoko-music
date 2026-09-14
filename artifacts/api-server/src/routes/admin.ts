@@ -94,12 +94,14 @@ router.get("/admin/orders", requireAdmin, async (req, res) => {
 
 router.patch("/admin/orders/:id", requireAdmin, async (req, res) => {
   try {
+    const orderId = typeof req.params.id === "string" ? req.params.id : undefined;
     const orderStatus = req.body?.orderStatus;
     const paymentStatus = req.body?.paymentStatus;
-    if (orderStatus !== undefined && (!orderStatuses.has(orderStatus) || typeof orderStatus !== "string")) {
+    if (!orderId) return res.status(400).json({ message: "Invalid order id" });
+    if (orderStatus !== undefined && (typeof orderStatus !== "string" || !orderStatuses.has(orderStatus))) {
       return res.status(400).json({ message: "Invalid order status" });
     }
-    if (paymentStatus !== undefined && (!paymentStatuses.has(paymentStatus) || typeof paymentStatus !== "string")) {
+    if (paymentStatus !== undefined && (typeof paymentStatus !== "string" || !paymentStatuses.has(paymentStatus))) {
       return res.status(400).json({ message: "Invalid payment status" });
     }
     if (orderStatus === undefined && paymentStatus === undefined) {
@@ -113,7 +115,7 @@ router.patch("/admin/orders/:id", requireAdmin, async (req, res) => {
         ...(paymentStatus !== undefined ? { paymentStatus } : {}),
         updatedAt: new Date(),
       })
-      .where(eq(ordersTable.id, req.params.id))
+      .where(eq(ordersTable.id, orderId))
       .returning();
 
     if (!order) return res.status(404).json({ message: "Order not found" });
