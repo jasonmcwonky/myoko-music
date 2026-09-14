@@ -1,0 +1,127 @@
+import { Router, type IRouter, type RequestHandler } from "express";
+import { db, ordersTable } from "@workspace/db";
+import { desc, eq } from "drizzle-orm";
+import { createHmac, timingSafeEqual } from "node:crypto";
+
+const router: IRouter = Router();
+const ADMIN_COOKIE = "myoko_admin_session";
+const SESSION_MAX_AGE_MS = 8 * 60 * 60 * 1000;
+const orderStatuses = new Set(["new", "confirmed", "making", "ready", "completed", "cancelled"]);
+const paymentStatuses = new Set(["unpaid", "paid"]);
+
+const getSecret = (key: string) => {
+  const value = process.env[key];
+  if (!value) throw new Error(`${key} is not configured`);
+  return value;
+};
+
+const sign = (payload: string) =>
+  createHmac("sha256", getSecret("SESSION_SECRET")).update(payload).digest("hex");
+
+const createSessionToken = () => {
+  const payload = String(Date.now());
+  return `${payload}.${sign(payload)}`;
+};
+
+const hasValidSession = (req: Parameters<RequestHandler>[0]) => {
+  const token = req.cookies?.[ADMIN_COOKIE];
+  if (typeof token !== "string") return false;
+  const [issuedAt, signature] = token.split(".");
+  if (!issuedAt || !signature || Date.now() - Number(issuedAt) > SESSION_MAX_AGE_MS) return false;
+  const expected = sign(issuedAt);
+  if (signature.length !== expected.length) return false;
+  return timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+};
+
+const requireAdmin: RequestHandler = (req, res, next) => {
+  try {
+    if (!hasValidSession(req)) return res.status(401).json({ message: "Admin login required" });
+    return next();
+  } catch (error) {
+    req.log?.error({ err: error }, "Admin session validation failed");
+    return res.status(503).json({ message: "Admin access is not configured" });
+  }
+};
+
+router.post("/admin/login", (req, res) => {
+  try {
+    const submitted = typeof req.body?.password === "string" ? req.body.password : "";
+    const expected = getSecret("MYOKO_ADMIN_PASSWORD");
+    const submittedBuffer = Buffer.from(submitted);
+    const expectedBuffer = Buffer.from(expected);
+    const valid =
+      submittedBuffer.length === expectedBuffer.length &&
+      timingSafeEqual(submittedBuffer, expectedBuffer);
+
+    if (!valid) return res.status(401).json({ message: "Incorrect password" });
+
+    res.cookie(ADMIN_COOKIE, createSessionToken(), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: SESSION_MAX_AGE_MS,
+      path: "/",
+    });
+    return res.json({ authenticated: true });
+  } catch (error) {
+    req.log?.error({ err: error }, "Admin login failed");
+    return res.status(503).json({ message: "Admin access is not configured" });
+  }
+});
+
+router.get("/admin/session", (req, res) => {
+  try {
+    return res.json({ authenticated: hasValidSession(req) });
+  } catch {
+    return res.json({ authenticated: false });
+  }
+});
+
+router.post("/admin/logout", (_req, res) => {
+  res.clearCookie(ADMIN_COOKIE, { httpOnly: true, sameSite: "lax", path: "/" });
+  return res.json({ authenticated: false });
+});
+
+router.get("/admin/orders", requireAdmin, async (req, res) => {
+  try {
+    const orders = await db.select().from(ordersTable).orderBy(desc(ordersTable.createdAt));
+    return res.json({ orders });
+  } catch (error) {
+    req.log?.error({ err: error }, "Order list failed");
+    return res.status(500).json({ message: "Could not load orders" });
+  }
+});
+
+router.patch("/admin/orders/:id", requireAdmin, async (req, res) => {
+  try {
+    const orderStatus = req.body?.orderStatus;
+    const paymentStatus = req.body?.paymentStatus;
+    if (orderStatus !== undefined && (!orderStatuses.has(orderStatus) || typeof orderStatus !== "string")) {
+      return res.status(400).json({ message: "Invalid order status" });
+    }
+    if (paymentStatus !== undefined && (!paymentStatuses.has(paymentStatus) || typeof paymentStatus !== "string")) {
+      return res.status(400).json({ message: "Invalid payment status" });
+    }
+    if (orderStatus === undefined && paymentStatus === undefined) {
+      return res.status(400).json({ message: "No status update provided" });
+    }
+
+    const [order] = await db
+      .update(ordersTable)
+      .set({
+        ...(orderStatus !== undefined ? { orderStatus } : {}),
+        ...(paymentStatus !== undefined ? { paymentStatus } : {}),
+        updatedAt: new Date(),
+      })
+      .where(eq(ordersTable.id, req.params.id))
+      .returning();
+
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    return res.json({ order });
+  } catch (error) {
+    req.log?.error({ err: error }, "Order update failed");
+    return res.status(500).json({ message: "Could not update order" });
+  }
+});
+
+export default router;

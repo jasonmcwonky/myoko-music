@@ -11,7 +11,14 @@ import releaseImage from '@assets/myoko-release.png';
 import loyaltyImage from '@assets/myoko-loyalty.jpg';
 
 type CartLine = { quantity: number };
-type CheckoutForm = { name: string; email: string; country: string; address: string; card: string; expiry: string; cvc: string; billing: string };
+type CheckoutForm = {
+  name: string;
+  className: string;
+  school: string;
+  albumName: string;
+  deliveryPreference: string;
+  deliveryNotes: string;
+};
 type Offer = { id: string; name: string; quantity: number; price: number; description: string };
 
 const queryClient = new QueryClient();
@@ -22,6 +29,20 @@ const offers: Offer[] = [
   { id: 'gang', name: 'The Gang Offer', quantity: 4, price: 100000, description: 'A keychain for your whole music-loving crew.' },
   { id: 'family', name: 'The Family Offer', quantity: 7, price: 167000, description: 'Seven keychains for the people who get your sound.' },
 ];
+const deliveryOptions = [
+  'Deliver at Morning Break',
+  'Deliver at Lunch',
+  'Deliver at Afternoon Break',
+  'Deliver After School',
+];
+const emptyCheckoutForm: CheckoutForm = {
+  name: '',
+  className: '',
+  school: '',
+  albumName: '',
+  deliveryPreference: deliveryOptions[0],
+  deliveryNotes: '',
+};
 
 const bestOfferPlan = (quantity: number) => {
   if (quantity <= 0) return [] as Offer[];
@@ -57,8 +78,11 @@ function Home() {
   const [loyaltyRewardAvailable, setLoyaltyRewardAvailable] = useState(() => typeof window !== 'undefined' && window.localStorage.getItem('myoko-loyalty-reward') === 'true');
   const [loyaltyApplied, setLoyaltyApplied] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [orderReference, setOrderReference] = useState('');
+  const [checkoutError, setCheckoutError] = useState('');
+  const [submittingOrder, setSubmittingOrder] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [form, setForm] = useState<CheckoutForm>({ name: '', email: '', country: 'Lao PDR', address: '', card: '', expiry: '', cvc: '', billing: '' });
+  const [form, setForm] = useState<CheckoutForm>(emptyCheckoutForm);
 
   const quantity = cart.quantity;
   const offerPlan = bestOfferPlan(quantity);
@@ -85,20 +109,56 @@ function Home() {
     setCouponApplied(false);
     setLoyaltyApplied(false);
   };
+  const resetCheckout = () => {
+    clearCart();
+    setForm(emptyCheckoutForm);
+    setOrderComplete(false);
+    setOrderReference('');
+    setCheckoutError('');
+  };
   const goTo = (id: string) => {
     setMobileMenu(false);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
-  const completeCheckout = (event: FormEvent) => {
+  const completeCheckout = async (event: FormEvent) => {
     event.preventDefault();
-    const nextStamps = loyaltyStamps + quantity;
-    setLoyaltyStamps(nextStamps);
-    if (loyaltyApplied) {
-      setLoyaltyRewardAvailable(false);
-    } else if (nextStamps >= 10) {
-      setLoyaltyRewardAvailable(true);
+    setCheckoutError('');
+    setSubmittingOrder(true);
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: form.name,
+          className: form.className,
+          school: form.school,
+          albumName: form.albumName,
+          deliveryPreference: form.deliveryPreference,
+          deliveryNotes: form.deliveryNotes,
+          quantity,
+          couponCode: couponApplied ? coupon : '',
+          loyaltyApplied,
+        }),
+      });
+      const result = await response.json() as { orderNumber?: string; message?: string };
+      if (!response.ok || !result.orderNumber) {
+        throw new Error(result.message || 'Could not save your order. Please try again.');
+      }
+
+      const nextStamps = loyaltyStamps + quantity;
+      setLoyaltyStamps(nextStamps);
+      if (loyaltyApplied) {
+        setLoyaltyRewardAvailable(false);
+      } else if (nextStamps >= 10) {
+        setLoyaltyRewardAvailable(true);
+      }
+      setOrderReference(result.orderNumber);
+      setOrderComplete(true);
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : 'Could not save your order. Please try again.');
+    } finally {
+      setSubmittingOrder(false);
     }
-    setOrderComplete(true);
   };
   const setField = (field: keyof CheckoutForm, value: string) => setForm((current) => ({ ...current, [field]: value }));
 
@@ -276,16 +336,19 @@ function Home() {
 
       {checkoutOpen && <div className="fixed inset-0 z-[60] overflow-y-auto bg-foreground/60 px-4 py-6 sm:px-8 sm:py-12" role="dialog" aria-modal="true" aria-label="Demo checkout">
         <div className="mx-auto max-w-3xl bg-background">
-          {orderComplete ? <div className="flex min-h-[550px] flex-col items-center justify-center px-6 py-16 text-center sm:px-16"><div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent text-background"><Check size={38} strokeWidth={2} /></div><p className="mt-8 font-mono-brand text-[10px] uppercase tracking-[.22em] text-primary">Thank you for backing small music</p><h2 className="mt-4 font-display text-5xl font-bold leading-[.9] tracking-[-.08em] sm:text-7xl">Your order<br /><span className="text-primary">is complete.</span></h2><p className="mt-6 max-w-md text-sm leading-relaxed text-foreground/60">This was a demonstration checkout. No payment was processed and no real order was created.</p><div className="mt-8 border border-foreground px-5 py-3 font-mono-brand text-xs tracking-[.12em]" data-testid="text-order-reference">ORDER REF / MYK-{Math.floor(1000 + Math.random() * 8999)}</div><button className="focus-ring mt-8 flex items-center gap-3 border border-foreground px-5 py-3 font-mono-brand text-[10px] uppercase tracking-[.14em] hover:bg-foreground hover:text-background" onClick={() => { setCheckoutOpen(false); setOrderComplete(false); clearCart(); }} data-testid="button-close-confirmation">Back to Myoko <ArrowRight size={14} /></button></div> : <form onSubmit={completeCheckout} className="p-6 sm:p-10">
-            <div className="flex items-start justify-between border-b border-foreground/20 pb-7"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.2em] text-primary">Demo checkout</p><h2 className="mt-2 font-display text-4xl font-bold tracking-[-.07em]">Make it yours.</h2><p className="mt-2 max-w-md text-sm text-foreground/60">A safe preview of the Myoko checkout. This form never charges your card. Closing this window clears the bag.</p></div><button type="button" className="focus-ring p-2" onClick={() => { setCheckoutOpen(false); clearCart(); }} aria-label="Close checkout and clear it" data-testid="button-close-checkout"><X size={20} /></button></div>
+          {orderComplete ? <div className="flex min-h-[550px] flex-col items-center justify-center px-6 py-16 text-center sm:px-16"><div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent text-background"><Check size={38} strokeWidth={2} /></div><p className="mt-8 font-mono-brand text-[10px] uppercase tracking-[.22em] text-primary">Your order is saved</p><h2 className="mt-4 font-display text-5xl font-bold leading-[.9] tracking-[-.08em] sm:text-7xl">See you<br /><span className="text-primary">at school.</span></h2><p className="mt-6 max-w-md text-sm leading-relaxed text-foreground/60">We’ll make your keychains and meet you during your selected delivery time. Payment is collected at handover by cash or your agreed QR method.</p><div className="mt-8 border border-foreground px-5 py-3 font-mono-brand text-xs tracking-[.12em]" data-testid="text-order-reference">ORDER REF / {orderReference}</div><button className="focus-ring mt-8 flex items-center gap-3 border border-foreground px-5 py-3 font-mono-brand text-[10px] uppercase tracking-[.14em] hover:bg-foreground hover:text-background" onClick={() => { setCheckoutOpen(false); resetCheckout(); }} data-testid="button-close-confirmation">Back to Myoko <ArrowRight size={14} /></button></div> : <form onSubmit={completeCheckout} className="p-6 sm:p-10">
+            <div className="flex items-start justify-between border-b border-foreground/20 pb-7"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.2em] text-primary">Reserve your keychains</p><h2 className="mt-2 font-display text-4xl font-bold tracking-[-.07em]">Make it yours.</h2><p className="mt-2 max-w-md text-sm text-foreground/60">Place a real preorder. We’ll collect payment when we give it to you at school. Closing this window clears the bag.</p></div><button type="button" className="focus-ring p-2" onClick={() => { setCheckoutOpen(false); resetCheckout(); }} aria-label="Close checkout and clear it" data-testid="button-close-checkout"><X size={20} /></button></div>
             <div className="mt-8 grid gap-x-6 gap-y-5 sm:grid-cols-2">
-              <label className="sm:col-span-2"><span className="form-label">Full name</span><input required value={form.name} onChange={(e) => setField('name', e.target.value)} className="form-input" placeholder="Your name" data-testid="input-checkout-name" /></label>
-              <label><span className="form-label">Email address</span><input required type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} className="form-input" placeholder="you@example.com" data-testid="input-checkout-email" /></label>
-              <label><span className="form-label">Country / region</span><select required value={form.country} onChange={(e) => setField('country', e.target.value)} className="form-input" data-testid="input-checkout-country"><option>Lao PDR</option><option>Thailand</option><option>Vietnam</option><option>Singapore</option><option>Other</option></select></label>
-              <label className="sm:col-span-2"><span className="form-label">Address</span><input required value={form.address} onChange={(e) => setField('address', e.target.value)} className="form-input" placeholder="Street, city, province" data-testid="input-checkout-address" /></label>
+              <label className="sm:col-span-2"><span className="form-label">1. Name <span className="text-primary">*</span></span><input required value={form.name} onChange={(e) => setField('name', e.target.value)} className="form-input" placeholder="Your name" data-testid="input-checkout-name" /></label>
+              <label><span className="form-label">2. Class <span className="text-primary">*</span></span><input required value={form.className} onChange={(e) => setField('className', e.target.value)} className="form-input" placeholder="For example: 10A" data-testid="input-checkout-class" /></label>
+              <label><span className="form-label">3. School <span className="text-primary">*</span></span><input required value={form.school} onChange={(e) => setField('school', e.target.value)} className="form-input" placeholder="Your school" data-testid="input-checkout-school" /></label>
+              <label className="sm:col-span-2"><span className="form-label">4. Album name <span className="text-primary">*</span></span><input required value={form.albumName} onChange={(e) => setField('albumName', e.target.value)} className="form-input" placeholder="The album name for your keychain" data-testid="input-checkout-album" /></label>
+              <label className="sm:col-span-2"><span className="form-label">5. Delivery preference <span className="text-primary">*</span></span><select required value={form.deliveryPreference} onChange={(e) => setField('deliveryPreference', e.target.value)} className="form-input" data-testid="input-checkout-delivery"><option value="" disabled>Select a delivery time</option>{deliveryOptions.map((option) => <option key={option}>{option}</option>)}</select><span className="mt-2 block text-xs leading-relaxed text-foreground/55">Not receiving the delivery at the chosen time means that you need to order again. It cannot be rescheduled.</span></label>
+              <label className="sm:col-span-2"><span className="form-label">6. Other notes for delivery <span className="text-foreground/45">(optional)</span></span><textarea value={form.deliveryNotes} onChange={(e) => setField('deliveryNotes', e.target.value)} className="form-input min-h-24 resize-y" placeholder="For example: the meeting area to exchange and get the product" data-testid="input-checkout-delivery-notes" /></label>
             </div>
-            <div className="mt-9 border-t border-foreground/20 pt-7"><div className="flex items-center justify-between"><h3 className="font-display text-2xl font-bold tracking-[-.05em]">Payment details</h3><span className="font-mono-brand text-[9px] uppercase tracking-[.12em] text-foreground/45">Demo only</span></div><div className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2"><label className="sm:col-span-2"><span className="form-label">Card number</span><input required inputMode="numeric" value={form.card} onChange={(e) => setField('card', e.target.value)} className="form-input font-mono-brand" placeholder="0000 0000 0000 0000" data-testid="input-checkout-card" /></label><label><span className="form-label">Expiry</span><input required value={form.expiry} onChange={(e) => setField('expiry', e.target.value)} className="form-input font-mono-brand" placeholder="MM / YY" data-testid="input-checkout-expiry" /></label><label><span className="form-label">CVC</span><input required inputMode="numeric" value={form.cvc} onChange={(e) => setField('cvc', e.target.value)} className="form-input font-mono-brand" placeholder="000" data-testid="input-checkout-cvc" /></label><label className="sm:col-span-2"><span className="form-label">Billing details</span><textarea required value={form.billing} onChange={(e) => setField('billing', e.target.value)} className="form-input min-h-20 resize-y" placeholder="Billing address or notes" data-testid="input-checkout-billing" /></label></div></div>
-            <div className="mt-8 flex flex-col-reverse items-stretch justify-between gap-4 border-t border-foreground/20 pt-6 sm:flex-row sm:items-center"><p className="font-mono-brand text-[10px] uppercase tracking-[.12em] text-foreground/50">Total today <strong className="ml-2 text-foreground">{money(total)}</strong></p><button type="submit" className="focus-ring flex items-center justify-center gap-3 bg-primary px-6 py-4 font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary-foreground hover:bg-accent" data-testid="button-submit-checkout">Place demo order <ArrowRight size={15} /></button></div>
+            <div className="mt-9 border-t border-foreground/20 pt-7"><div className="flex items-center justify-between"><h3 className="font-display text-2xl font-bold tracking-[-.05em]">Payment at handover</h3><span className="font-mono-brand text-[9px] uppercase tracking-[.12em] text-foreground/45">Cash / QR</span></div><p className="mt-3 text-sm leading-relaxed text-foreground/60">We’ll collect payment when we deliver your order. Choose cash or an approved BCEL OnePay/TrustPay QR method with the Myoko team.</p></div>
+            {checkoutError && <p className="mt-6 border border-primary bg-primary/10 px-4 py-3 text-sm text-primary" role="alert">{checkoutError}</p>}
+            <div className="mt-8 flex flex-col-reverse items-stretch justify-between gap-4 border-t border-foreground/20 pt-6 sm:flex-row sm:items-center"><p className="font-mono-brand text-[10px] uppercase tracking-[.12em] text-foreground/50">Total at handover <strong className="ml-2 text-foreground">{money(total)}</strong></p><button type="submit" disabled={submittingOrder} className="focus-ring flex items-center justify-center gap-3 bg-primary px-6 py-4 font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary-foreground hover:bg-accent disabled:cursor-wait disabled:opacity-60" data-testid="button-submit-checkout">{submittingOrder ? 'Saving order…' : 'Place order'} <ArrowRight size={15} /></button></div>
           </form>}
         </div>
       </div>}
@@ -306,8 +369,119 @@ function Home() {
   );
 }
 
+type AdminOrder = {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  className: string;
+  school: string;
+  albumName: string;
+  deliveryPreference: string;
+  deliveryNotes: string | null;
+  keychainQuantity: number;
+  offers: Array<{ name: string; quantity: number; price: number }>;
+  subtotal: number;
+  couponDiscount: number;
+  loyaltyDiscount: number;
+  total: number;
+  paymentMethod: string;
+  paymentStatus: 'unpaid' | 'paid';
+  orderStatus: 'new' | 'confirmed' | 'making' | 'ready' | 'completed' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+};
+
+const adminOrderStatuses: AdminOrder['orderStatus'][] = ['new', 'confirmed', 'making', 'ready', 'completed', 'cancelled'];
+
+function AdminPage() {
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [password, setPassword] = useState('');
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [error, setError] = useState('');
+
+  const loadOrders = async () => {
+    setLoadingOrders(true);
+    try {
+      const response = await fetch('/api/admin/orders');
+      if (response.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
+      const result = await response.json() as { orders?: AdminOrder[]; message?: string };
+      if (!response.ok) throw new Error(result.message || 'Could not load orders');
+      setOrders(result.orders || []);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Could not load orders');
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  useEffect(() => {
+    fetch('/api/admin/session')
+      .then(async (response) => {
+        const result = await response.json() as { authenticated?: boolean };
+        setAuthenticated(result.authenticated === true);
+        if (result.authenticated) await loadOrders();
+      })
+      .catch(() => {
+        setAuthenticated(false);
+        setError('The admin service is unavailable.');
+      });
+  }, []);
+
+  const login = async (event: FormEvent) => {
+    event.preventDefault();
+    setError('');
+    const response = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+    const result = await response.json() as { message?: string };
+    if (!response.ok) {
+      setError(result.message || 'Login failed');
+      return;
+    }
+    setPassword('');
+    setAuthenticated(true);
+    await loadOrders();
+  };
+
+  const updateOrder = async (id: string, values: Partial<Pick<AdminOrder, 'orderStatus' | 'paymentStatus'>>) => {
+    const response = await fetch(`/api/admin/orders/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(values),
+    });
+    const result = await response.json() as { order?: AdminOrder; message?: string };
+    if (!response.ok || !result.order) {
+      setError(result.message || 'Could not update order');
+      return;
+    }
+    setOrders((current) => current.map((order) => order.id === id ? result.order as AdminOrder : order));
+  };
+
+  const logout = async () => {
+    await fetch('/api/admin/logout', { method: 'POST' });
+    setAuthenticated(false);
+    setOrders([]);
+  };
+
+  if (authenticated === null) {
+    return <div className="myoko-page flex min-h-[100dvh] items-center justify-center bg-background px-5"><p className="font-mono-brand text-xs uppercase tracking-[.18em]">Checking admin access…</p></div>;
+  }
+
+  if (!authenticated) {
+    return <main className="myoko-page noise flex min-h-[100dvh] items-center justify-center bg-foreground px-5 py-10 text-background"><div className="w-full max-w-md border border-background/25 bg-[#171615] p-7 sm:p-10"><div className="flex items-center gap-3"><img src={logoImage} alt="" className="h-10 w-10 rounded-full object-cover" /><span className="font-display text-xl font-bold">MYOKO MUSIC</span></div><p className="mt-12 font-mono-brand text-[10px] uppercase tracking-[.22em] text-secondary">Private team area</p><h1 className="mt-3 font-display text-5xl font-bold leading-[.9] tracking-[-.08em]">Orders<br /><span className="text-primary">only.</span></h1><p className="mt-5 text-sm leading-relaxed text-background/60">This page is for the Myoko team. Customers do not need an account to place an order.</p><form onSubmit={login} className="mt-8"><label><span className="form-label text-background">Admin password</span><input autoFocus required type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="form-input border-background/35 text-background placeholder:text-background/35" placeholder="Enter the team password" data-testid="input-admin-password" /></label>{error && <p className="mt-4 text-sm text-secondary" role="alert">{error}</p>}<button type="submit" className="focus-ring mt-6 flex w-full items-center justify-center gap-3 bg-primary px-5 py-4 font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary-foreground hover:bg-accent" data-testid="button-admin-login">Open orders <ArrowRight size={15} /></button></form></div></main>;
+  }
+
+  return <main className="myoko-page noise min-h-[100dvh] bg-background px-5 py-8 sm:px-8 lg:px-12 lg:py-12"><div className="mx-auto max-w-[1280px]"><header className="flex flex-col justify-between gap-5 border-b border-foreground/20 pb-7 sm:flex-row sm:items-end"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.22em] text-primary">Private team area</p><h1 className="mt-2 font-display text-5xl font-bold tracking-[-.08em]">Myoko <span className="text-primary">orders.</span></h1><p className="mt-3 text-sm text-foreground/60">Manage preorders, delivery timing, and handover payment.</p></div><div className="flex gap-3"><button className="focus-ring border border-foreground px-4 py-3 font-mono-brand text-[10px] uppercase tracking-[.12em] hover:bg-foreground hover:text-background" onClick={() => void loadOrders()} disabled={loadingOrders}>{loadingOrders ? 'Refreshing…' : 'Refresh'}</button><button className="focus-ring border border-foreground px-4 py-3 font-mono-brand text-[10px] uppercase tracking-[.12em] hover:bg-foreground hover:text-background" onClick={() => void logout()}>Log out</button></div></header>{error && <p className="mt-6 border border-primary bg-primary/10 px-4 py-3 text-sm text-primary" role="alert">{error}</p>}<div className="mt-8 grid gap-4 sm:grid-cols-3"><div className="border border-foreground/20 bg-secondary p-5"><p className="font-mono-brand text-[9px] uppercase tracking-[.15em]">Total orders</p><p className="mt-3 font-display text-4xl font-bold">{orders.length}</p></div><div className="border border-foreground/20 bg-secondary p-5"><p className="font-mono-brand text-[9px] uppercase tracking-[.15em]">To make</p><p className="mt-3 font-display text-4xl font-bold">{orders.filter((order) => !['completed', 'cancelled'].includes(order.orderStatus)).length}</p></div><div className="border border-foreground/20 bg-secondary p-5"><p className="font-mono-brand text-[9px] uppercase tracking-[.15em]">Unpaid</p><p className="mt-3 font-display text-4xl font-bold">{orders.filter((order) => order.paymentStatus === 'unpaid').length}</p></div></div><div className="mt-8 space-y-5">{orders.length === 0 && <div className="border border-foreground/20 p-10 text-center"><p className="font-display text-2xl font-bold">No orders yet.</p><p className="mt-2 text-sm text-foreground/60">New website orders will appear here.</p></div>}{orders.map((order) => <article key={order.id} className="border border-foreground/20 bg-background p-5 sm:p-7"><div className="flex flex-col justify-between gap-5 border-b border-foreground/15 pb-5 lg:flex-row lg:items-start"><div><div className="flex flex-wrap items-center gap-3"><span className="font-mono-brand text-xs text-primary">{order.orderNumber}</span><span className="font-mono-brand text-[9px] uppercase tracking-[.13em] text-foreground/45">{new Date(order.createdAt).toLocaleString()}</span></div><h2 className="mt-3 font-display text-3xl font-bold tracking-[-.06em]">{order.customerName}</h2><p className="mt-1 text-sm text-foreground/60">{order.className} · {order.school} · {order.albumName}</p></div><div className="text-left lg:text-right"><p className="font-display text-2xl font-bold">{money(order.total)}</p><p className="mt-1 font-mono-brand text-[9px] uppercase tracking-[.12em] text-foreground/50">{order.keychainQuantity} keychains / {order.paymentMethod.replaceAll('_', ' ')}</p></div></div><div className="grid gap-5 py-5 md:grid-cols-[1fr_1fr_.8fr]"><div><p className="font-mono-brand text-[9px] uppercase tracking-[.14em] text-primary">Offers</p><p className="mt-2 text-sm leading-relaxed">{order.offers.map((offer) => `${offer.quantity} × ${offer.name}`).join(' · ')}</p></div><div><p className="font-mono-brand text-[9px] uppercase tracking-[.14em] text-primary">Delivery</p><p className="mt-2 text-sm">{order.deliveryPreference}</p><p className="mt-1 text-sm text-foreground/60">{order.deliveryNotes || 'No extra delivery note.'}</p></div><div><p className="font-mono-brand text-[9px] uppercase tracking-[.14em] text-primary">Payment</p><select value={order.paymentStatus} onChange={(event) => void updateOrder(order.id, { paymentStatus: event.target.value as AdminOrder['paymentStatus'] })} className="form-input mt-2" data-testid={`select-payment-${order.id}`}><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select></div></div><div className="flex flex-col gap-4 border-t border-foreground/15 pt-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-mono-brand text-[9px] uppercase tracking-[.14em] text-primary">Order status</p><select value={order.orderStatus} onChange={(event) => void updateOrder(order.id, { orderStatus: event.target.value as AdminOrder['orderStatus'] })} className="form-input mt-2 sm:w-64" data-testid={`select-order-status-${order.id}`}>{adminOrderStatuses.map((status) => <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>)}</select></div><p className="max-w-sm text-xs leading-relaxed text-foreground/50">The customer selected <strong className="text-foreground/75">{order.deliveryPreference}</strong>. Missing that handover means the order cannot be rescheduled.</p></div></article>)}</div></div></main>;
+}
+
 function Router() {
-  return <Switch><Route path="/" component={Home} /><Route component={NotFound} /></Switch>;
+  return <Switch><Route path="/" component={Home} /><Route path="/admin" component={AdminPage} /><Route component={NotFound} /></Switch>;
 }
 
 function App() {
