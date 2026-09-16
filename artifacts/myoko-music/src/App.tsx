@@ -10,6 +10,10 @@ import logoImage from '@assets/myoko-logo.png';
 import releaseImage from '@assets/myoko-release.png';
 import loyaltyImage from '@assets/myoko-loyalty.jpg';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
+const apiUrl = (path: string) => `${API_URL}${path}`;
+
 type CartLine = { quantity: number };
 type CheckoutForm = {
   name: string;
@@ -121,25 +125,26 @@ function Home() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
   const completeCheckout = async (event: FormEvent) => {
-    event.preventDefault();
-    setCheckoutError('');
-    setSubmittingOrder(true);
-    try {
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerName: form.name,
-          className: form.className,
-          school: form.school,
-          albumName: form.albumName,
-          deliveryPreference: form.deliveryPreference,
-          deliveryNotes: form.deliveryNotes,
-          quantity,
-          couponCode: couponApplied ? coupon : '',
-          loyaltyApplied,
-        }),
-      });
+  event.preventDefault();
+  setCheckoutError('');
+  setSubmittingOrder(true);
+
+  try {
+    const response = await fetch(apiUrl('/api/orders'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customerName: form.name,
+        className: form.className,
+        school: form.school,
+        albumName: form.albumName,
+        deliveryPreference: form.deliveryPreference,
+        deliveryNotes: form.deliveryNotes,
+        quantity,
+        couponCode: couponApplied ? coupon : '',
+        loyaltyApplied,
+      }),
+    });
       const result = await response.json() as { orderNumber?: string; message?: string };
       if (!response.ok || !result.orderNumber) {
         throw new Error(result.message || 'Could not save your order. Please try again.');
@@ -403,7 +408,7 @@ function AdminPage() {
   const loadOrders = async () => {
     setLoadingOrders(true);
     try {
-      const response = await fetch('/api/admin/orders');
+      const response = await fetch(apiUrl('/api/admin/orders'))
       if (response.status === 401) {
         setAuthenticated(false);
         return;
@@ -419,7 +424,7 @@ function AdminPage() {
   };
 
   useEffect(() => {
-    fetch('/api/admin/session')
+    fetch(apiUrl('/api/admin/session'))
       .then(async (response) => {
         const result = await response.json() as { authenticated?: boolean };
         setAuthenticated(result.authenticated === true);
@@ -434,7 +439,7 @@ function AdminPage() {
   const login = async (event: FormEvent) => {
     event.preventDefault();
     setError('');
-    const response = await fetch('/api/admin/login', {
+    const response = await fetch(apiUrl('/api/admin/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password }),
@@ -450,7 +455,7 @@ function AdminPage() {
   };
 
   const updateOrder = async (id: string, values: Partial<Pick<AdminOrder, 'orderStatus' | 'paymentStatus'>>) => {
-    const response = await fetch(`/api/admin/orders/${id}`, {
+    const response = await fetch(apiUrl(`/api/admin/orders/${id}`), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(values),
@@ -464,7 +469,7 @@ function AdminPage() {
   };
 
   const logout = async () => {
-    await fetch('/api/admin/logout', { method: 'POST' });
+    await fetch(apiUrl('/api/admin/logout'), { method: 'POST' });
     setAuthenticated(false);
     setOrders([]);
   };
