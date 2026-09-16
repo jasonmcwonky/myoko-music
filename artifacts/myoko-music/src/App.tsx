@@ -408,7 +408,9 @@ function AdminPage() {
   const loadOrders = async () => {
     setLoadingOrders(true);
     try {
-      const response = await fetch(apiUrl('/api/admin/orders'))
+      const response = await fetch(apiUrl('/api/admin/orders'), {
+  credentials: 'include',
+});
       if (response.status === 401) {
         setAuthenticated(false);
         return;
@@ -424,7 +426,9 @@ function AdminPage() {
   };
 
   useEffect(() => {
-    fetch(apiUrl('/api/admin/session'))
+    fetch(apiUrl('/api/admin/session'), {
+  credentials: 'include',
+})
       .then(async (response) => {
         const result = await response.json() as { authenticated?: boolean };
         setAuthenticated(result.authenticated === true);
@@ -442,6 +446,7 @@ function AdminPage() {
     const response = await fetch(apiUrl('/api/admin/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ password }),
     });
     const result = await response.json() as { message?: string };
@@ -457,6 +462,7 @@ function AdminPage() {
   const updateOrder = async (id: string, values: Partial<Pick<AdminOrder, 'orderStatus' | 'paymentStatus'>>) => {
     const response = await fetch(apiUrl(`/api/admin/orders/${id}`), {
       method: 'PATCH',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(values),
     });
@@ -469,7 +475,10 @@ function AdminPage() {
   };
 
   const logout = async () => {
-    await fetch(apiUrl('/api/admin/logout'), { method: 'POST' });
+    await fetch(apiUrl('/api/admin/logout'), {
+  method: 'POST',
+  credentials: 'include',
+});
     setAuthenticated(false);
     setOrders([]);
   };
