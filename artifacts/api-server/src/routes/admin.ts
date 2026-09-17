@@ -59,8 +59,8 @@ router.post("/admin/login", (req, res) => {
 
     res.cookie(ADMIN_COOKIE, createSessionToken(), {
       httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
+      secure: true,
       maxAge: SESSION_MAX_AGE_MS,
       path: "/",
     });
@@ -80,7 +80,12 @@ router.get("/admin/session", (req, res) => {
 });
 
 router.post("/admin/logout", (_req, res) => {
-  res.clearCookie(ADMIN_COOKIE, { httpOnly: true, sameSite: "lax", path: "/" });
+  res.clearCookie(ADMIN_COOKIE, {
+  httpOnly: true,
+  sameSite: "none",
+  secure: true,
+  path: "/",
+});
   return res.json({ authenticated: false });
 });
 
