@@ -38,9 +38,11 @@ const requireAdmin: RequestHandler = (req, res, next) => {
     if (!hasValidSession(req)) return res.status(401).json({ message: "Admin login required" });
     return next();
   } catch (error) {
-    req.log?.error({ err: error }, "Admin session validation failed");
-    return res.status(503).json({ message: "Admin access is not configured" });
-  }
+  req.log?.error({ err: error }, "Admin login failed");
+  return res.status(500).json({
+    message: error instanceof Error ? error.message : "Admin login failed",
+  });
+}
 };
 
 router.post("/admin/login", (req, res) => {
