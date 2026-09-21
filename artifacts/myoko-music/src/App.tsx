@@ -22,7 +22,10 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 const apiUrl = (path: string) => `${API_URL}${path}`;
 
-type CartLine = { quantity: number };
+type CartLine = {
+  quantity: number;
+  offerId?: string;
+};
 type CheckoutForm = {
   name: string;
   className: string;
@@ -56,23 +59,6 @@ const emptyCheckoutForm: CheckoutForm = {
   deliveryNotes: '',
 };
 
-const bestOfferPlan = (quantity: number) => {
-  if (quantity <= 0) return [] as Offer[];
-  const plan = Array.from({ length: quantity + 1 }, () => ({ cost: Number.POSITIVE_INFINITY, offers: [] as Offer[] }));
-  plan[0] = { cost: 0, offers: [] };
-  for (let total = 1; total <= quantity; total += 1) {
-    for (const offer of offers) {
-      if (total < offer.quantity || !Number.isFinite(plan[total - offer.quantity].cost)) continue;
-      const candidateOffers = [...plan[total - offer.quantity].offers, offer];
-      const candidateCost = plan[total - offer.quantity].cost + offer.price;
-      if (candidateCost < plan[total].cost || (candidateCost === plan[total].cost && candidateOffers.length < plan[total].offers.length)) {
-        plan[total] = { cost: candidateCost, offers: candidateOffers };
-      }
-    }
-  }
-  return plan[quantity].offers;
-};
-
 const readStoredNumber = (key: string) => {
   if (typeof window === 'undefined') return 0;
   const stored = Number(window.localStorage.getItem(key));
@@ -98,14 +84,23 @@ function Home() {
   const [musicOffersOpen, setMusicOffersOpen] = useState(false);
 
   const quantity = cart.quantity;
-  const offerPlan = bestOfferPlan(quantity);
-  const subtotal = offerPlan.reduce((sum, offer) => sum + offer.price, 0);
-  const discount = couponApplied ? 5000 : 0;
-  const loyaltyDiscount = loyaltyApplied ? Math.round(subtotal * 0.3) : 0;
-  const total = Math.max(0, subtotal - discount - loyaltyDiscount);
-  const groupedPlan = offers
-    .map((offer) => ({ offer, count: offerPlan.filter((plannedOffer) => plannedOffer.id === offer.id).length }))
-    .filter(({ count }) => count > 0);
+
+const selectedOffer = offers.find(
+  (offer) => offer.id === cart.offerId
+);
+
+const subtotal = selectedOffer?.price ?? 0;
+
+const discount = couponApplied ? 5000 : 0;
+
+const loyaltyDiscount = loyaltyApplied
+  ? Math.round(subtotal * 0.3)
+  : 0;
+
+const total = Math.max(
+  0,
+  subtotal - discount - loyaltyDiscount
+);
 
   useEffect(() => {
     window.localStorage.setItem('myoko-loyalty-stamps', String(loyaltyStamps));
@@ -113,9 +108,13 @@ function Home() {
   }, [loyaltyRewardAvailable, loyaltyStamps]);
 
   const addOffer = (offer: Offer) => {
-    setCart((current) => ({ quantity: current.quantity + offer.quantity }));
-    setCartOpen(true);
-  };
+  setCart({
+    quantity: offer.quantity,
+    offerId: offer.id,
+  });
+
+  setCartOpen(true);
+};
   const clearCart = () => {
     setCart({ quantity: 0 });
     setCoupon('');
@@ -694,9 +693,59 @@ function Home() {
            <div className="flex items-center justify-between border-b border-foreground/20 px-6 py-5"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.2em] text-primary">Your bag</p><h2 className="mt-1 font-display text-3xl font-bold tracking-[-.06em]">Ready to play.</h2></div><button className="focus-ring p-2" onClick={() => { setCartOpen(false); clearCart(); }} aria-label="Close shopping bag and clear it" data-testid="button-close-cart"><X size={20} /></button></div>
           <div className="flex-1 overflow-y-auto px-6 py-7">
              {quantity === 0 ? <div className="flex h-full flex-col items-center justify-center text-center"><div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-foreground"><ShoppingBag size={22} /></div><h3 className="font-display text-2xl font-bold">The bag is quiet.</h3><p className="mt-2 max-w-xs text-sm text-foreground/55">Choose an offer and give it something to say.</p><button className="focus-ring mt-7 bg-primary px-5 py-3 font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary-foreground" onClick={() => { setCartOpen(false); goTo('listen'); }} data-testid="button-empty-shop">Browse the offers</button></div> : <div>
-               <div className="flex gap-4 border-b border-foreground/15 pb-6"><img src={releaseImage} alt="Myoko Music release" className="h-20 w-20 rounded-[4px] object-cover" /><div className="flex flex-1 justify-between"><div><h3 className="font-display text-xl font-bold">Your offer stack</h3><p className="mt-1 font-mono-brand text-[9px] uppercase tracking-[.13em] text-foreground/50">{quantity} keychains / best value</p></div><p className="font-mono-brand text-xs">{money(subtotal)}</p></div></div>
-               <div className="border-b border-foreground/15 py-5"><div className="flex items-center justify-between"><span className="font-mono-brand text-[10px] uppercase tracking-[.15em]">Best offer combination</span><span className="font-mono-brand text-xs text-primary" data-testid="text-item-quantity">{quantity} keychains</span></div><div className="mt-4 space-y-3">{groupedPlan.map(({ offer, count }) => <div key={offer.id} className="flex items-center justify-between text-sm"><span>{count} × {offer.name}</span><span className="font-mono-brand text-xs">{money(offer.price * count)}</span></div>)}</div><p className="mt-4 text-xs leading-relaxed text-foreground/55">We automatically combine offers so you never pay more than necessary.</p></div>
-               <div className="border-b border-foreground/15 py-5"><label htmlFor="coupon" className="font-mono-brand text-[10px] uppercase tracking-[.15em]">Coupon code</label><div className="mt-3 flex gap-2"><input id="coupon" value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="MYOKO5K" className="focus-ring min-w-0 flex-1 border border-foreground bg-transparent px-3 py-2 font-mono-brand text-xs uppercase outline-none" data-testid="input-coupon" /><button className="focus-ring border border-foreground px-3 py-2 font-mono-brand text-[10px] uppercase tracking-[.1em] hover:bg-foreground hover:text-background" onClick={() => setCouponApplied(coupon.trim().toUpperCase() === 'MYOKO5K')} data-testid="button-apply-coupon">Apply</button></div>{couponApplied && <p className="mt-2 flex items-center gap-1 text-xs text-accent"><Check size={13} /> 5,000 KIP taken off.</p>}</div>
+               <div className="flex gap-4 border-b border-foreground/15 pb-6">
+  <img
+    src={releaseImage}
+    alt="Myoko Music release"
+    className="h-20 w-20 rounded-[4px] object-cover"
+  />
+
+  <div className="flex flex-1 justify-between">
+    <div>
+      <h3 className="font-display text-xl font-bold">
+        {selectedOffer?.name ?? 'Your bundle'}
+      </h3>
+
+      <p className="mt-1 font-mono-brand text-[9px] uppercase tracking-[.13em] text-foreground/50">
+        {quantity} keychains
+      </p>
+    </div>
+
+    <p className="font-mono-brand text-xs">
+      {money(subtotal)}
+    </p>
+  </div>
+</div>
+
+<div className="border-b border-foreground/15 py-5">
+  <div className="flex items-center justify-between">
+    <span className="font-mono-brand text-[10px] uppercase tracking-[.15em]">
+      Selected bundle
+    </span>
+
+    <span
+      className="font-mono-brand text-xs text-primary"
+      data-testid="text-item-quantity"
+    >
+      {quantity} keychains
+    </span>
+  </div>
+
+  {selectedOffer && (
+    <div className="mt-4 flex items-center justify-between text-sm">
+      <span>{selectedOffer.name}</span>
+
+      <span className="font-mono-brand text-xs">
+        {money(selectedOffer.price)}
+      </span>
+    </div>
+  )}
+
+  <p className="mt-4 text-xs leading-relaxed text-foreground/55">
+    This order uses one fixed bundle. Different bundles cannot be combined.
+  </p>
+</div>
+               <div className="border-b border-foreground/15 py-5"><label htmlFor="coupon" className="font-mono-brand text-[10px] uppercase tracking-[.15em]">Coupon code</label><div className="mt-3 flex gap-2"><input id="coupon" value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="MYOKO5K" className="focus-ring min-w-0 flex-1 border border-foreground bg-transparent px-3 py-2 font-mono-brand text-xs uppercase outline-none" data-testid="input-coupon" /><button className="focus-ring border border-foreground px-3 py-2 font-mono-brand text-[10px] uppercase tracking-[.1em] hover:bg-foreground hover:text-background" onClick={() => setCouponApplied(coupon.trim().toUpperCase() === 'MYOKOISTHEBEST')} data-testid="button-apply-coupon">Apply</button></div>{couponApplied && <p className="mt-2 flex items-center gap-1 text-xs text-accent"><Check size={13} /> 5,000 KIP taken off.</p>}</div>
                {loyaltyRewardAvailable && <div className="border-b border-foreground/15 py-5"><div className="flex items-start justify-between gap-4"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary">Loyalty reward unlocked</p><p className="mt-2 text-sm leading-relaxed text-foreground/70">Free keychain + 30% off this new order.</p></div><button className={`focus-ring shrink-0 border px-3 py-2 font-mono-brand text-[9px] uppercase tracking-[.1em] ${loyaltyApplied ? 'border-primary bg-primary text-primary-foreground' : 'border-foreground hover:bg-foreground hover:text-background'}`} onClick={() => setLoyaltyApplied((applied) => !applied)} data-testid="button-apply-loyalty">{loyaltyApplied ? 'Applied' : 'Use reward'}</button></div>{loyaltyApplied && <p className="mt-3 flex items-center gap-1 text-xs text-accent"><Check size={13} /> One free keychain added. 30% taken off.</p>}</div>}
                <div className="space-y-3 pt-6 text-sm"><div className="flex justify-between"><span className="text-foreground/55">Subtotal</span><span data-testid="text-subtotal">{money(subtotal)}</span></div>{couponApplied && <div className="flex justify-between text-accent"><span>Coupon</span><span>-{money(discount)}</span></div>}{loyaltyApplied && <div className="flex justify-between text-accent"><span>Loyalty reward</span><span>-{money(loyaltyDiscount)}</span></div>}{loyaltyApplied && <div className="flex justify-between text-foreground/55"><span>Keychains included</span><span>{quantity + 1}</span></div>}<div className="flex justify-between border-t border-foreground/20 pt-4 font-display text-xl font-bold"><span>Total</span><span data-testid="text-cart-total">{money(total)}</span></div></div>
             </div>}
