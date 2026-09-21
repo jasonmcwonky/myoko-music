@@ -36,7 +36,7 @@ type Offer = { id: string; name: string; quantity: number; price: number; descri
 const queryClient = new QueryClient();
 const money = (value: number) => `${value.toLocaleString('en-US')} KIP`;
 const offers: Offer[] = [
-  { id: 'special-one', name: 'The Special One Offer', quantity: 1, price: 27000, description: 'One customized keychain, made just for you.' },
+  { id: 'special-one', name: 'The Single Offer', quantity: 1, price: 27000, description: 'One customized keychain, made just for you.' },
   { id: 'better-together', name: 'The Better Together Offer', quantity: 2, price: 45000, description: 'Keep one. Gift one. Start a tiny movement.' },
   { id: 'gang', name: 'The Gang Offer', quantity: 4, price: 100000, description: 'A keychain for your whole music-loving crew.' },
   { id: 'family', name: 'The Family Offer', quantity: 7, price: 167000, description: 'Seven keychains for the people who get your sound.' },
