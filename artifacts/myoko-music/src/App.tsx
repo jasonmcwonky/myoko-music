@@ -296,7 +296,7 @@ function Home() {
 
         <div>
           <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
-            Music Keychains
+            MYOKO Music
           </h3>
           <p className="mt-2 text-xs leading-relaxed text-background/55">
             Turn your favorite album into something you can carry everywhere.
@@ -328,7 +328,7 @@ function Home() {
 
         <div>
           <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
-            Pay Keychains
+            MYOKO Pay
           </h3>
           <p className="mt-2 text-xs leading-relaxed text-background/45">
             Tap, scan and make payments easier.
@@ -360,7 +360,7 @@ function Home() {
 
         <div>
           <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
-            Invite Keychains
+            MYOKO Invite
           </h3>
           <p className="mt-2 text-xs leading-relaxed text-background/45">
             Share invitations and special moments in a new way.
@@ -392,7 +392,7 @@ function Home() {
 
         <div>
           <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
-            Business Keychains
+            MYOKO Business
           </h3>
           <p className="mt-2 text-xs leading-relaxed text-background/45">
             A smart little keychain for your brand or business.
@@ -424,7 +424,7 @@ function Home() {
 
         <div>
           <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
-            ID Keychains
+             MYOKO ID
           </h3>
           <p className="mt-2 text-xs leading-relaxed text-background/45">
             Keep important identification information close.
@@ -456,7 +456,7 @@ function Home() {
 
         <div>
           <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
-            Social Media Keychains
+            MYOKO Social Media
           </h3>
           <p className="mt-2 text-xs leading-relaxed text-background/45">
             Put your socials one scan away.
@@ -488,7 +488,7 @@ function Home() {
 
         <div>
           <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
-            Memory Keychains
+            MYOKO Keychains
           </h3>
           <p className="mt-2 text-xs leading-relaxed text-background/45">
             Keep a memory, photo or moment with you.
@@ -498,7 +498,7 @@ function Home() {
 
       {/* 08 — CUSTOM */}
       <button
-        className="group relative flex min-h-[390px] flex-col justify-between overflow-hidden bg-primary p-5 text-left text-primary-foreground transition hover:bg-accent sm:p-6"
+        className="group relative flex min-h-[390px] flex-col justify-between overflow-hidden bg-[#171615] p-5 text-left text-background transition hover:bg-background/10 sm:p-6"
         onClick={() => {
           // Custom Keychain functionality will be connected next.
           alert('Custom Keychains are coming next!');
@@ -506,7 +506,7 @@ function Home() {
         data-testid="service-custom-keychains"
       >
         <div className="flex items-start justify-between">
-          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em]">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
             08 / Build your own
           </span>
           <ArrowRight
@@ -525,9 +525,9 @@ function Home() {
 
         <div>
           <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
-            Custom Keychains
+            MYOKO Custom
           </h3>
-          <p className="mt-2 text-xs leading-relaxed text-primary-foreground/70">
+          <p className="mt-2 text-xs leading-relaxed text-background/55">
             Build your own keychain with up to two pieces of media.
           </p>
         </div>
