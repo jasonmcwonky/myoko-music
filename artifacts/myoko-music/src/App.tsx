@@ -95,6 +95,7 @@ function Home() {
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [form, setForm] = useState<CheckoutForm>(emptyCheckoutForm);
+  const [musicOffersOpen, setMusicOffersOpen] = useState(false);
 
   const quantity = cart.quantity;
   const offerPlan = bestOfferPlan(quantity);
@@ -272,8 +273,8 @@ function Home() {
       <button
         className="group relative flex min-h-[390px] flex-col justify-between overflow-hidden bg-[#171615] p-5 text-left transition hover:bg-background/10 sm:p-6"
         onClick={() => {
-          goTo('music-offers');
-        }}
+                setMusicOffersOpen(true);
+                        }}
         data-testid="service-music-keychains"
       >
         <div className="flex items-start justify-between">
@@ -322,7 +323,7 @@ function Home() {
           <img
             src={payKeychainImage}
             alt="Pay Keychains"
-            className="max-h-52 w-full object-contain opacity-55 grayscale transition duration-300 group-hover:opacity-70"
+            className="max-h-52 w-full object-contain transition duration-300 group-hover:scale-105"
           />
         </div>
 
@@ -354,7 +355,7 @@ function Home() {
           <img
             src={inviteKeychainImage}
             alt="Invite Keychains"
-            className="max-h-52 w-full object-contain opacity-55 grayscale transition duration-300 group-hover:opacity-70"
+            className="max-h-52 w-full object-contain transition duration-300 group-hover:scale-105"
           />
         </div>
 
@@ -386,7 +387,7 @@ function Home() {
           <img
             src={businessKeychainImage}
             alt="Business Keychains"
-            className="max-h-52 w-full object-contain opacity-55 grayscale transition duration-300 group-hover:opacity-70"
+            className="max-h-52 w-full object-contain transition duration-300 group-hover:scale-105"
           />
         </div>
 
@@ -418,7 +419,7 @@ function Home() {
           <img
             src={idKeychainImage}
             alt="ID Keychains"
-            className="max-h-52 w-full object-contain opacity-55 grayscale transition duration-300 group-hover:opacity-70"
+            className="max-h-52 w-full object-contain transition duration-300 group-hover:scale-105"
           />
         </div>
 
@@ -450,7 +451,7 @@ function Home() {
           <img
             src={socialKeychainImage}
             alt="Social Media Keychains"
-            className="max-h-52 w-full object-contain opacity-55 grayscale transition duration-300 group-hover:opacity-70"
+            className="max-h-52 w-full object-contain transition duration-300 group-hover:scale-105"
           />
         </div>
 
@@ -482,7 +483,7 @@ function Home() {
           <img
             src={memoryKeychainImage}
             alt="Memory Keychains"
-            className="max-h-52 w-full object-contain opacity-55 grayscale transition duration-300 group-hover:opacity-70"
+            className="max-h-52 w-full object-contain transition duration-300 group-hover:scale-105"
           />
         </div>
 
@@ -552,11 +553,99 @@ function Home() {
       ))}
     </div>
 
-    {/* Hidden anchor used by the Music Keychains service button */}
-    <div id="music-offers" className="relative -top-24" />
-
   </div>
 </section>
+
+{musicOffersOpen && (
+  <div
+    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-5 backdrop-blur-sm"
+    onClick={() => setMusicOffersOpen(false)}
+  >
+    <div
+      className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto bg-background p-6 text-foreground sm:p-8"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Close button */}
+      <button
+        type="button"
+        onClick={() => setMusicOffersOpen(false)}
+        className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center border border-foreground/20 transition hover:bg-foreground hover:text-background"
+        aria-label="Close music keychain options"
+      >
+        <X size={16} />
+      </button>
+
+      {/* Header */}
+      <div className="pr-12">
+        <p className="font-mono-brand text-[10px] uppercase tracking-[.24em] text-primary">
+          Music Keychains
+        </p>
+
+        <h2 className="mt-3 font-display text-4xl font-bold tracking-[-.06em] sm:text-5xl">
+          Pick your bundle.
+        </h2>
+
+        <p className="mt-3 max-w-xl text-sm leading-relaxed text-foreground/60">
+          Choose how many music keychains you want. You can add a bundle to
+          your cart and continue shopping before checking out.
+        </p>
+      </div>
+
+      {/* Bundle options */}
+      <div className="mt-8 grid gap-3 sm:grid-cols-2">
+        {offers.map((offer) => (
+          <button
+            key={offer.id}
+            type="button"
+            onClick={() => {
+              addOffer(offer);
+              setMusicOffersOpen(false);
+            }}
+            className="group border border-foreground/15 p-5 text-left transition hover:border-primary hover:bg-foreground/[0.03]"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-mono-brand text-[9px] uppercase tracking-[.18em] text-primary">
+                  {offer.quantity} {offer.quantity === 1 ? 'Keychain' : 'Keychains'}
+                </p>
+
+                <h3 className="mt-2 font-display text-2xl font-bold tracking-[-.04em]">
+                  {offer.name}
+                </h3>
+              </div>
+
+              <ArrowRight
+                size={18}
+                className="mt-1 shrink-0 transition-transform group-hover:translate-x-1"
+              />
+            </div>
+
+            <p className="mt-3 text-sm leading-relaxed text-foreground/55">
+              {offer.description}
+            </p>
+
+            <div className="mt-6 flex items-end justify-between">
+              <span className="font-mono-brand text-sm">
+                {offer.price.toLocaleString()} kip
+              </span>
+
+              <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-foreground/45">
+                Add to cart
+              </span>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Small note */}
+      <div className="mt-6 border-t border-foreground/10 pt-5">
+        <p className="font-mono-brand text-[9px] uppercase tracking-[.12em] text-foreground/45">
+          You can add multiple bundles to your cart.
+        </p>
+      </div>
+    </div>
+  </div>
+)}
 
         <section id="story" className="mx-auto grid max-w-[1280px] gap-12 px-5 py-24 sm:px-8 lg:grid-cols-[.75fr_1.25fr] lg:px-12 lg:py-36">
           <div><p className="font-mono-brand text-[10px] uppercase tracking-[.24em] text-primary">02 / The Origin </p><div className="mt-8 h-32 w-32 rounded-full border border-foreground bg-secondary p-3"><img src={logoImage} alt="" className="record-spin h-full w-full rounded-full object-cover" /></div></div>
