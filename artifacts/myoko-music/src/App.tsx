@@ -9,6 +9,14 @@ import NotFound from '@/pages/not-found';
 import logoImage from '@assets/myoko-music.png';
 import releaseImage from '@assets/myoko-release.png';
 import loyaltyImage from '@assets/myoko-loyalty.jpg';
+import musicKeychainImage from '@assets/music-keychain.png';
+import payKeychainImage from '@assets/pay-keychain.png';
+import inviteKeychainImage from '@assets/invite-keychain.png';
+import businessKeychainImage from '@assets/business-keychain.png';
+import idKeychainImage from '@assets/id-keychain.png';
+import socialKeychainImage from '@assets/social-keychain.png';
+import memoryKeychainImage from '@assets/memory-keychain.png';
+import customKeychainImage from '@assets/custom-keychain.png';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -205,7 +213,7 @@ function Home() {
           <div className="relative z-10">
             <p className="reveal font-mono-brand text-[10px] uppercase tracking-[.25em] text-primary">MYOKO Music / Vientiane, Laos</p>
             <h1 className="reveal reveal-delay-1 mt-6 max-w-3xl font-display text-[clamp(4rem,10vw,9.3rem)] font-extrabold leading-[.82] tracking-[-.095em]">
-              YOUR<br /><span className="text-primary">OWN</span><br />MUSIC.
+              MAKE YOUR<br /><span className="text-primary">OWN</span><br />KIND OF...
             </h1>
             <div className="reveal reveal-delay-2 mt-8 flex max-w-lg items-start gap-5">
               <div className="mt-2 h-px w-12 shrink-0 bg-foreground" />
@@ -238,48 +246,317 @@ function Home() {
         </div>
 
         <section id="listen" className="bg-foreground px-5 py-20 text-background sm:px-8 lg:px-12 lg:py-28">
-          <div className="mx-auto max-w-[1280px]">
-            <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
-              <div>
-                <p className="font-mono-brand text-[10px] uppercase tracking-[.24em] text-secondary">01 / Shop</p>
-                <h2 className="mt-4 max-w-2xl font-display text-5xl font-bold leading-[.92] tracking-[-.07em] sm:text-7xl">Listen to it<br /><span className="text-primary">your</span> own way.</h2>
-              </div>
-              <p className="max-w-xs text-sm leading-relaxed text-background/60">A pocket-sized music keychain for the days that you need them. Affordable by design. Impossible to ignore.</p>
-            </div>
-            <div className="mt-14 grid gap-7 lg:grid-cols-[1.2fr_.8fr]">
-              <div className="relative overflow-hidden border border-background/25 bg-[#171615] p-5 sm:p-8">
-                <div className="absolute right-7 top-7 font-mono-brand text-[9px] uppercase tracking-[.18em] text-background/40">MYK-001 / 2025</div>
-                  <div className="flex min-h-[390px] items-center justify-center">
-                  <div className="relative w-[min(78vw,440px)]">
-                    <div className="absolute inset-0 translate-x-5 translate-y-5 rounded-[4px] border border-primary/50 bg-primary/20" />
-                    <img src={releaseImage} alt="Myoko Music release artwork" className="relative block w-full rounded-[4px] object-contain shadow-[0_0_0_11px_#b93c3c,0_0_0_12px_#171615]" />
-                  </div>
-                </div>
-                <div className="flex items-end justify-between gap-4 border-t border-background/20 pt-5">
-                  <div><p className="font-display text-2xl font-bold">Music Keychains</p><p className="mt-1 font-mono-brand text-[10px] uppercase tracking-[.15em] text-background/50">Order your favorite album now!!!</p></div>
-                </div>
-              </div>
-              <div className="flex flex-col gap-5">
-                <div className="bg-secondary p-6 text-foreground sm:p-8">
-                  <div className="flex items-start justify-between"><span className="font-mono-brand text-[10px] uppercase tracking-[.18em]">Offers, not loose keychains</span><span className="font-display text-4xl font-bold">04</span></div>
-                  <h3 className="mt-10 font-display text-3xl font-bold leading-tight tracking-[-.05em]">Pick a stack.<br />We find the best value.</h3>
-                  <p className="mt-4 max-w-xs text-sm leading-relaxed text-foreground/65">Every order is built from these offers. Add any combination and we automatically choose the lowest-cost way to reach your keychain count.</p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {offers.map((offer, index) => (
-                    <button key={offer.id} className="focus-ring group flex min-h-44 flex-col justify-between border border-background/30 p-5 text-left transition hover:border-secondary hover:bg-background/5" onClick={() => addOffer(offer)} data-testid={`button-add-offer-${offer.id}`}>
-                      <div className="flex items-start justify-between gap-3"><span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">{offer.name}</span><span className="font-mono-brand text-[9px] text-background/45">0{index + 1}</span></div>
-                      <div><p className="mt-6 font-display text-2xl font-bold tracking-[-.05em]">{offer.quantity} {offer.quantity === 1 ? 'Keychain' : 'Keychains'}</p><p className="mt-1 font-mono-brand text-xs text-secondary">{money(offer.price)}</p><p className="mt-3 text-xs leading-relaxed text-background/55">{offer.description}</p></div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="mt-8 grid grid-cols-2 gap-3 border-t border-background/20 pt-6 text-background/55 sm:grid-cols-4">
-              {['Locally packed with care', 'Personalized', 'Affordable with great quality', '90 days money-back guranteed'].map((text, i) => <div key={text} className="flex items-center gap-2 font-mono-brand text-[9px] uppercase tracking-[.12em]"><span className="text-secondary">0{i + 1}</span>{text}</div>)}
-            </div>
-          </div>
-        </section>
+  <div className="mx-auto max-w-[1280px]">
+
+    <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+      <div>
+        <p className="font-mono-brand text-[10px] uppercase tracking-[.24em] text-secondary">
+          01 / Services
+        </p>
+
+        <h2 className="mt-4 max-w-3xl font-display text-5xl font-bold leading-[.92] tracking-[-.07em] sm:text-7xl">
+          More than<br />
+          <span className="text-primary">just</span> music.
+        </h2>
+      </div>
+
+      <p className="max-w-xs text-sm leading-relaxed text-background/60">
+        Pick a service. Make it personal. Carry something that actually means
+        something to you.
+      </p>
+    </div>
+
+    <div className="mt-14 grid gap-px border border-background/25 bg-background/25 sm:grid-cols-2 lg:grid-cols-4">
+
+      {/* 01 — MUSIC */}
+      <button
+        className="group relative flex min-h-[390px] flex-col justify-between overflow-hidden bg-[#171615] p-5 text-left transition hover:bg-background/10 sm:p-6"
+        onClick={() => {
+          goTo('music-offers');
+        }}
+        data-testid="service-music-keychains"
+      >
+        <div className="flex items-start justify-between">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
+            01 / Available
+          </span>
+          <ArrowRight
+            size={16}
+            className="transition-transform group-hover:translate-x-1"
+          />
+        </div>
+
+        <div className="flex flex-1 items-center justify-center py-8">
+          <img
+            src={musicKeychainImage}
+            alt="Music Keychains"
+            className="max-h-52 w-full object-contain transition duration-300 group-hover:scale-105"
+          />
+        </div>
+
+        <div>
+          <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
+            Music Keychains
+          </h3>
+          <p className="mt-2 text-xs leading-relaxed text-background/55">
+            Turn your favorite album into something you can carry everywhere.
+          </p>
+        </div>
+      </button>
+
+      {/* 02 — PAY */}
+      <div
+        className="group relative flex min-h-[390px] flex-col justify-between overflow-hidden bg-[#171615] p-5 sm:p-6"
+        data-testid="service-pay-keychains"
+      >
+        <div className="flex items-start justify-between">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
+            02 / Coming Soon
+          </span>
+          <span className="font-mono-brand text-[9px] text-background/35">
+            SOON
+          </span>
+        </div>
+
+        <div className="flex flex-1 items-center justify-center py-8">
+          <img
+            src={payKeychainImage}
+            alt="Pay Keychains"
+            className="max-h-52 w-full object-contain opacity-55 grayscale transition duration-300 group-hover:opacity-70"
+          />
+        </div>
+
+        <div>
+          <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
+            Pay Keychains
+          </h3>
+          <p className="mt-2 text-xs leading-relaxed text-background/45">
+            Tap, scan and make payments easier.
+          </p>
+        </div>
+      </div>
+
+      {/* 03 — INVITE */}
+      <div
+        className="group relative flex min-h-[390px] flex-col justify-between overflow-hidden bg-[#171615] p-5 sm:p-6"
+        data-testid="service-invite-keychains"
+      >
+        <div className="flex items-start justify-between">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
+            03 / Coming Soon
+          </span>
+          <span className="font-mono-brand text-[9px] text-background/35">
+            SOON
+          </span>
+        </div>
+
+        <div className="flex flex-1 items-center justify-center py-8">
+          <img
+            src={inviteKeychainImage}
+            alt="Invite Keychains"
+            className="max-h-52 w-full object-contain opacity-55 grayscale transition duration-300 group-hover:opacity-70"
+          />
+        </div>
+
+        <div>
+          <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
+            Invite Keychains
+          </h3>
+          <p className="mt-2 text-xs leading-relaxed text-background/45">
+            Share invitations and special moments in a new way.
+          </p>
+        </div>
+      </div>
+
+      {/* 04 — BUSINESS */}
+      <div
+        className="group relative flex min-h-[390px] flex-col justify-between overflow-hidden bg-[#171615] p-5 sm:p-6"
+        data-testid="service-business-keychains"
+      >
+        <div className="flex items-start justify-between">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
+            04 / Coming Soon
+          </span>
+          <span className="font-mono-brand text-[9px] text-background/35">
+            SOON
+          </span>
+        </div>
+
+        <div className="flex flex-1 items-center justify-center py-8">
+          <img
+            src={businessKeychainImage}
+            alt="Business Keychains"
+            className="max-h-52 w-full object-contain opacity-55 grayscale transition duration-300 group-hover:opacity-70"
+          />
+        </div>
+
+        <div>
+          <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
+            Business Keychains
+          </h3>
+          <p className="mt-2 text-xs leading-relaxed text-background/45">
+            A smart little keychain for your brand or business.
+          </p>
+        </div>
+      </div>
+
+      {/* 05 — ID */}
+      <div
+        className="group relative flex min-h-[390px] flex-col justify-between overflow-hidden bg-[#171615] p-5 sm:p-6"
+        data-testid="service-id-keychains"
+      >
+        <div className="flex items-start justify-between">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
+            05 / Coming Soon
+          </span>
+          <span className="font-mono-brand text-[9px] text-background/35">
+            SOON
+          </span>
+        </div>
+
+        <div className="flex flex-1 items-center justify-center py-8">
+          <img
+            src={idKeychainImage}
+            alt="ID Keychains"
+            className="max-h-52 w-full object-contain opacity-55 grayscale transition duration-300 group-hover:opacity-70"
+          />
+        </div>
+
+        <div>
+          <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
+            ID Keychains
+          </h3>
+          <p className="mt-2 text-xs leading-relaxed text-background/45">
+            Keep important identification information close.
+          </p>
+        </div>
+      </div>
+
+      {/* 06 — SOCIAL MEDIA */}
+      <div
+        className="group relative flex min-h-[390px] flex-col justify-between overflow-hidden bg-[#171615] p-5 sm:p-6"
+        data-testid="service-social-keychains"
+      >
+        <div className="flex items-start justify-between">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
+            06 / Coming Soon
+          </span>
+          <span className="font-mono-brand text-[9px] text-background/35">
+            SOON
+          </span>
+        </div>
+
+        <div className="flex flex-1 items-center justify-center py-8">
+          <img
+            src={socialKeychainImage}
+            alt="Social Media Keychains"
+            className="max-h-52 w-full object-contain opacity-55 grayscale transition duration-300 group-hover:opacity-70"
+          />
+        </div>
+
+        <div>
+          <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
+            Social Media Keychains
+          </h3>
+          <p className="mt-2 text-xs leading-relaxed text-background/45">
+            Put your socials one scan away.
+          </p>
+        </div>
+      </div>
+
+      {/* 07 — MEMORY */}
+      <div
+        className="group relative flex min-h-[390px] flex-col justify-between overflow-hidden bg-[#171615] p-5 sm:p-6"
+        data-testid="service-memory-keychains"
+      >
+        <div className="flex items-start justify-between">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
+            07 / Coming Soon
+          </span>
+          <span className="font-mono-brand text-[9px] text-background/35">
+            SOON
+          </span>
+        </div>
+
+        <div className="flex flex-1 items-center justify-center py-8">
+          <img
+            src={memoryKeychainImage}
+            alt="Memory Keychains"
+            className="max-h-52 w-full object-contain opacity-55 grayscale transition duration-300 group-hover:opacity-70"
+          />
+        </div>
+
+        <div>
+          <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
+            Memory Keychains
+          </h3>
+          <p className="mt-2 text-xs leading-relaxed text-background/45">
+            Keep a memory, photo or moment with you.
+          </p>
+        </div>
+      </div>
+
+      {/* 08 — CUSTOM */}
+      <button
+        className="group relative flex min-h-[390px] flex-col justify-between overflow-hidden bg-primary p-5 text-left text-primary-foreground transition hover:bg-accent sm:p-6"
+        onClick={() => {
+          // Custom Keychain functionality will be connected next.
+          alert('Custom Keychains are coming next!');
+        }}
+        data-testid="service-custom-keychains"
+      >
+        <div className="flex items-start justify-between">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em]">
+            08 / Build your own
+          </span>
+          <ArrowRight
+            size={16}
+            className="transition-transform group-hover:translate-x-1"
+          />
+        </div>
+
+        <div className="flex flex-1 items-center justify-center py-8">
+          <img
+            src={customKeychainImage}
+            alt="Custom Keychains"
+            className="max-h-52 w-full object-contain transition duration-300 group-hover:scale-105"
+          />
+        </div>
+
+        <div>
+          <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
+            Custom Keychains
+          </h3>
+          <p className="mt-2 text-xs leading-relaxed text-primary-foreground/70">
+            Build your own keychain with up to two pieces of media.
+          </p>
+        </div>
+      </button>
+
+    </div>
+
+    <div className="mt-8 grid gap-3 border-t border-background/20 pt-6 sm:grid-cols-4">
+      {[
+        'Personalized',
+        'Locally made',
+        'Multiple formats',
+        'Made for you',
+      ].map((text, i) => (
+        <div
+          key={text}
+          className="flex items-center gap-2 font-mono-brand text-[9px] uppercase tracking-[.12em] text-background/55"
+        >
+          <span className="text-secondary">0{i + 1}</span>
+          {text}
+        </div>
+      ))}
+    </div>
+
+    {/* Hidden anchor used by the Music Keychains service button */}
+    <div id="music-offers" className="relative -top-24" />
+
+  </div>
+</section>
 
         <section id="story" className="mx-auto grid max-w-[1280px] gap-12 px-5 py-24 sm:px-8 lg:grid-cols-[.75fr_1.25fr] lg:px-12 lg:py-36">
           <div><p className="font-mono-brand text-[10px] uppercase tracking-[.24em] text-primary">02 / The Origin </p><div className="mt-8 h-32 w-32 rounded-full border border-foreground bg-secondary p-3"><img src={logoImage} alt="" className="record-spin h-full w-full rounded-full object-cover" /></div></div>
