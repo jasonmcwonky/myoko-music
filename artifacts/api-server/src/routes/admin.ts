@@ -46,28 +46,67 @@ const requireAdmin: RequestHandler = (req, res, next) => {
 };
 
 router.post("/admin/login", (req, res) => {
+  console.log("[ADMIN LOGIN] POST reached Express");
+
   try {
-    const submitted = typeof req.body?.password === "string" ? req.body.password : "";
+    console.log("[ADMIN LOGIN] Reading password");
+
+    const submitted =
+      typeof req.body?.password === "string"
+        ? req.body.password
+        : "";
+
+    console.log("[ADMIN LOGIN] Reading environment variables");
+
     const expected = getSecret("MYOKO_ADMIN_PASSWORD");
+
+    console.log("[ADMIN LOGIN] Comparing password");
+
     const submittedBuffer = Buffer.from(submitted);
     const expectedBuffer = Buffer.from(expected);
+
     const valid =
       submittedBuffer.length === expectedBuffer.length &&
       timingSafeEqual(submittedBuffer, expectedBuffer);
 
-    if (!valid) return res.status(401).json({ message: "Incorrect password" });
+    console.log("[ADMIN LOGIN] Password comparison complete:", valid);
 
-    res.cookie(ADMIN_COOKIE, createSessionToken(), {
+    if (!valid) {
+      return res.status(401).json({
+        message: "Incorrect password",
+      });
+    }
+
+    console.log("[ADMIN LOGIN] Creating session");
+
+    const token = createSessionToken();
+
+    console.log("[ADMIN LOGIN] Setting cookie");
+
+    res.cookie(ADMIN_COOKIE, token, {
       httpOnly: true,
       sameSite: "none",
       secure: true,
       maxAge: SESSION_MAX_AGE_MS,
       path: "/",
     });
-    return res.json({ authenticated: true });
+
+    console.log("[ADMIN LOGIN] Sending success response");
+
+    return res.json({
+      authenticated: true,
+    });
   } catch (error) {
-    req.log?.error({ err: error }, "Admin login failed");
-    return res.status(503).json({ message: "Admin access is not configured" });
+    console.error("[ADMIN LOGIN] ERROR:", error);
+
+    req.log?.error(
+      { err: error },
+      "Admin login failed",
+    );
+
+    return res.status(503).json({
+      message: "Admin access is not configured",
+    });
   }
 });
 
