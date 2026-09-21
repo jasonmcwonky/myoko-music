@@ -9,14 +9,14 @@ import NotFound from '@/pages/not-found';
 import logoImage from '@assets/myoko-music.png';
 import releaseImage from '@assets/myoko-release.png';
 import loyaltyImage from '@assets/myoko-loyalty.jpg';
-import musicKeychainImage from '@assets/music-keychain.png';
-import payKeychainImage from '@assets/pay-keychain.png';
-import inviteKeychainImage from '@assets/invite-keychain.png';
-import businessKeychainImage from '@assets/business-keychain.png';
-import idKeychainImage from '@assets/id-keychain.png';
-import socialKeychainImage from '@assets/social-keychain.png';
-import memoryKeychainImage from '@assets/memory-keychain.png';
-import customKeychainImage from '@assets/custom-keychain.png';
+import musicKeychainImage from '@assets/music-keychain.jpg';
+import payKeychainImage from '@assets/pay-keychain.jpg';
+import inviteKeychainImage from '@assets/invite-keychain.jpg';
+import businessKeychainImage from '@assets/business-keychain.jpg';
+import idKeychainImage from '@assets/id-keychain.jpg';
+import socialKeychainImage from '@assets/social-media-keychain.jpg';
+import memoryKeychainImage from '@assets/memory-keychain.jpg';
+import customKeychainImage from '@assets/custom-keychain.jpg';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
