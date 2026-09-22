@@ -811,7 +811,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
     This order uses one fixed bundle. Different bundles cannot be combined.
   </p>
 </div>
-               <div className="border-b border-foreground/15 py-5"><label htmlFor="coupon" className="font-mono-brand text-[10px] uppercase tracking-[.15em]">Coupon code</label><div className="mt-3 flex gap-2"><input id="coupon" value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="MYOKO5K" className="focus-ring min-w-0 flex-1 border border-foreground bg-transparent px-3 py-2 font-mono-brand text-xs uppercase outline-none" data-testid="input-coupon" /><button className="focus-ring border border-foreground px-3 py-2 font-mono-brand text-[10px] uppercase tracking-[.1em] hover:bg-foreground hover:text-background" onClick={() => setCouponApplied(coupon.trim().toUpperCase() === 'MYOKOISTHEBEST')} data-testid="button-apply-coupon">Apply</button></div>{couponApplied && <p className="mt-2 flex items-center gap-1 text-xs text-accent"><Check size={13} /> 5,000 KIP taken off.</p>}</div>
+               <div className="border-b border-foreground/15 py-5"><label htmlFor="coupon" className="font-mono-brand text-[10px] uppercase tracking-[.15em]">Coupon code</label><div className="mt-3 flex gap-2"><input id="coupon" value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="MYOKO5K" className="focus-ring min-w-0 flex-1 border border-foreground bg-transparent px-3 py-2 font-mono-brand text-xs uppercase outline-none" data-testid="input-coupon" /><button className="focus-ring border border-foreground px-3 py-2 font-mono-brand text-[10px] uppercase tracking-[.1em] hover:bg-foreground hover:text-background" onClick={() => setCouponApplied(coupon.trim().toUpperCase() === 'MYOKO5K')} data-testid="button-apply-coupon">Apply</button></div>{couponApplied && <p className="mt-2 flex items-center gap-1 text-xs text-accent"><Check size={13} /> 5,000 KIP taken off.</p>}</div>
                {loyaltyRewardAvailable && <div className="border-b border-foreground/15 py-5"><div className="flex items-start justify-between gap-4"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary">Loyalty reward unlocked</p><p className="mt-2 text-sm leading-relaxed text-foreground/70">Free keychain + 30% off this new order.</p></div><button className={`focus-ring shrink-0 border px-3 py-2 font-mono-brand text-[9px] uppercase tracking-[.1em] ${loyaltyApplied ? 'border-primary bg-primary text-primary-foreground' : 'border-foreground hover:bg-foreground hover:text-background'}`} onClick={() => setLoyaltyApplied((applied) => !applied)} data-testid="button-apply-loyalty">{loyaltyApplied ? 'Applied' : 'Use reward'}</button></div>{loyaltyApplied && <p className="mt-3 flex items-center gap-1 text-xs text-accent"><Check size={13} /> One free keychain added. 30% taken off.</p>}</div>}
                <div className="space-y-3 pt-6 text-sm"><div className="flex justify-between"><span className="text-foreground/55">Subtotal</span><span data-testid="text-subtotal">{money(subtotal)}</span></div>{couponApplied && <div className="flex justify-between text-accent"><span>Coupon</span><span>-{money(discount)}</span></div>}{loyaltyApplied && <div className="flex justify-between text-accent"><span>Loyalty reward</span><span>-{money(loyaltyDiscount)}</span></div>}{loyaltyApplied && <div className="flex justify-between text-foreground/55"><span>Keychains included</span><span>{quantity + 1}</span></div>}<div className="flex justify-between border-t border-foreground/20 pt-4 font-display text-xl font-bold"><span>Total</span><span data-testid="text-cart-total">{money(total)}</span></div></div>
             </div>}
@@ -1108,14 +1108,20 @@ function CustomPage() {
             <button
   type="button"
   disabled={!media1.trim()}
-  className="mt-8 w-full bg-primary px-5 py-4 font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+  className="mt-8 w-full bg-primary px-5 py-4 font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary-foreground transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
   onClick={() => {
+    const firstMedia = media1.trim();
+    const secondMedia = media2.trim();
+    const personalization = customText.trim();
+
+    if (!firstMedia) return;
+
     setCart({
       quantity,
       custom: {
-        media1: media1.trim(),
-        ...(media2.trim() ? { media2: media2.trim() } : {}),
-        ...(customText.trim() ? { text: customText.trim() } : {}),
+        media1: firstMedia,
+        ...(secondMedia ? { media2: secondMedia } : {}),
+        ...(personalization ? { text: personalization } : {}),
       },
     });
 
