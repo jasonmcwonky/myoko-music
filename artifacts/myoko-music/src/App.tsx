@@ -139,15 +139,6 @@ const total = Math.max(0, subtotal - discount - loyaltyDiscount);
 
   setCartOpen(true);
 };
-
-const addCustom = (custom: CartLine['custom'], quantity: number) => {
-  setCart({
-    quantity,
-    custom,
-  });
-
-  setCartOpen(true);
-};
   const clearCart = () => {
     setCart({ quantity: 0 });
     setCoupon('');
@@ -165,7 +156,7 @@ const addCustom = (custom: CartLine['custom'], quantity: number) => {
     setMobileMenu(false);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
-  const completeCheckout = async (event: FormEvent) => {
+ const completeCheckout = async (event: FormEvent) => {
   event.preventDefault();
   setCheckoutError('');
   setSubmittingOrder(true);
@@ -182,31 +173,57 @@ const addCustom = (custom: CartLine['custom'], quantity: number) => {
         deliveryPreference: form.deliveryPreference,
         deliveryNotes: form.deliveryNotes,
         quantity,
+
+        // Custom keychain information
+        custom: cart.custom
+          ? {
+              media1: cart.custom.media1,
+              media2: cart.custom.media2,
+              text: cart.custom.text,
+            }
+          : null,
+
         couponCode: couponApplied ? coupon : '',
         loyaltyApplied,
       }),
     });
-      const result = await response.json() as { orderNumber?: string; message?: string };
-      if (!response.ok || !result.orderNumber) {
-        throw new Error(result.message || 'Could not save your order. Please try again.');
-      }
 
-      const nextStamps = loyaltyStamps + quantity;
-      setLoyaltyStamps(nextStamps);
-      if (loyaltyApplied) {
-        setLoyaltyRewardAvailable(false);
-      } else if (nextStamps >= 10) {
-        setLoyaltyRewardAvailable(true);
-      }
-      setOrderReference(result.orderNumber);
-      setOrderComplete(true);
-    } catch (error) {
-      setCheckoutError(error instanceof Error ? error.message : 'Could not save your order. Please try again.');
-    } finally {
-      setSubmittingOrder(false);
+    const result = await response.json() as {
+      orderNumber?: string;
+      message?: string;
+    };
+
+    if (!response.ok || !result.orderNumber) {
+      throw new Error(
+        result.message || 'Could not save your order. Please try again.'
+      );
     }
-  };
-  const setField = (field: keyof CheckoutForm, value: string) => setForm((current) => ({ ...current, [field]: value }));
+
+    const nextStamps = loyaltyStamps + quantity;
+    setLoyaltyStamps(nextStamps);
+
+    if (loyaltyApplied) {
+      setLoyaltyRewardAvailable(false);
+    } else if (nextStamps >= 10) {
+      setLoyaltyRewardAvailable(true);
+    }
+
+    setOrderReference(result.orderNumber);
+    setOrderComplete(true);
+  } catch (error) {
+    setCheckoutError(
+      error instanceof Error
+        ? error.message
+        : 'Could not save your order. Please try again.'
+    );
+  } finally {
+    setSubmittingOrder(false);
+  }
+};
+
+const setField = (field: keyof CheckoutForm, value: string) =>
+  setForm((current) => ({ ...current, [field]: value }));
+
 
   return (
   <CartContext.Provider value={cartContextValue}>

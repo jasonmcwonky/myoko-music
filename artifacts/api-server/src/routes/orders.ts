@@ -70,6 +70,40 @@ const readOptionalText = (value: unknown, maxLength = 500) => {
   return text || null;
 };
 
+type CustomOrder = {
+  media1: string;
+  media2?: string;
+  text?: string;
+};
+
+const readCustomOrder = (value: unknown): CustomOrder | null => {
+  if (value === undefined || value === null) return null;
+
+  if (typeof value !== "object") {
+    throw new Error("Custom keychain information is invalid");
+  }
+
+  const custom = value as Record<string, unknown>;
+
+  const media1 = readRequiredText(custom.media1, "First media", 500);
+
+  let media2: string | undefined;
+  if (custom.media2 !== undefined && custom.media2 !== null && custom.media2 !== "") {
+    media2 = readRequiredText(custom.media2, "Second media", 500);
+  }
+
+  let text: string | undefined;
+  if (custom.text !== undefined && custom.text !== null && custom.text !== "") {
+    text = readRequiredText(custom.text, "Personalization", 40);
+  }
+
+  return {
+    media1,
+    ...(media2 ? { media2 } : {}),
+    ...(text ? { text } : {}),
+  };
+};
+
 const router: IRouter = Router();
 
 router.post("/orders", async (req, res) => {
@@ -93,8 +127,15 @@ router.post("/orders", async (req, res) => {
       throw new Error("The keychain quantity is invalid");
     }
 
-    const offerPlan = bestOfferPlan(quantity);
-    const subtotal = offerPlan.reduce((sum, offer) => sum + offer.price, 0);
+    const custom = readCustomOrder(req.body?.custom);
+
+    const CUSTOM_PRICE = 25000;
+
+const offerPlan = custom ? [] : bestOfferPlan(quantity);
+
+const subtotal = custom
+  ? CUSTOM_PRICE * quantity
+  : offerPlan.reduce((sum, offer) => sum + offer.price, 0);
     const couponCode =
       typeof req.body?.couponCode === "string"
         ? req.body.couponCode.trim().toUpperCase()
@@ -122,6 +163,7 @@ router.post("/orders", async (req, res) => {
         deliveryNotes,
         keychainQuantity: quantity,
         offers: offerPlan,
+        custom,
         subtotal,
         couponDiscount,
         loyaltyDiscount,

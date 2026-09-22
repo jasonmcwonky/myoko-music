@@ -13,6 +13,7 @@ export const ordersTable = pgTable(
     deliveryNotes: text("delivery_notes"),
     keychainQuantity: integer("keychain_quantity").notNull(),
     offers: jsonb("offers").notNull(),
+    custom: jsonb("custom"),
     subtotal: integer("subtotal").notNull(),
     couponDiscount: integer("coupon_discount").notNull().default(0),
     loyaltyDiscount: integer("loyalty_discount").notNull().default(0),
