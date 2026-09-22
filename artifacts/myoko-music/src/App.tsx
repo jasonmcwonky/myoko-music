@@ -224,7 +224,6 @@ const total = Math.max(0, subtotal - discount - loyaltyDiscount);
 const setField = (field: keyof CheckoutForm, value: string) =>
   setForm((current) => ({ ...current, [field]: value }));
 
-
   return (
   <CartContext.Provider value={cartContextValue}>
     <div className="myoko-page noise min-h-[100dvh] bg-background">
@@ -1107,24 +1106,24 @@ function CustomPage() {
             </div>
 
             <button
-              type="button"
-              disabled={!media1.trim()}
-              className="mt-8 w-full bg-primary px-5 py-4 font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
-              onClick={() => {
-  setCart({
-    quantity,
-    custom: {
-      media1: media1.trim(),
-      ...(media2.trim() ? { media2: media2.trim() } : {}),
-      ...(customText.trim() ? { text: customText.trim() } : {}),
-    },
-  });
+  type="button"
+  disabled={!media1.trim()}
+  className="mt-8 w-full bg-primary px-5 py-4 font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+  onClick={() => {
+    setCart({
+      quantity,
+      custom: {
+        media1: media1.trim(),
+        ...(media2.trim() ? { media2: media2.trim() } : {}),
+        ...(customText.trim() ? { text: customText.trim() } : {}),
+      },
+    });
 
-  setCartOpen(true);
-}}
-            >
-              Add custom keychain
-            </button>
+    setCartOpen(true);
+  }}
+>
+  Add custom keychain
+</button>
 
           </aside>
 
