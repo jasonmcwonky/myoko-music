@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { createContext, useContext, useEffect, useState, type FormEvent } from 'react';
 import { ArrowDown, ArrowRight, Check, ChevronDown, Gift, ShoppingBag, X } from 'lucide-react';
 import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -25,6 +25,30 @@ const apiUrl = (path: string) => `${API_URL}${path}`;
 type CartLine = {
   quantity: number;
   offerId?: string;
+
+  custom?: {
+    media1: string;
+    media2?: string;
+    text?: string;
+  };
+};
+type CartContextType = {
+  cart: CartLine;
+  setCart: React.Dispatch<React.SetStateAction<CartLine>>;
+  cartOpen: boolean;
+  setCartOpen: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+const CartContext = createContext<CartContextType | null>(null);
+
+const useCart = () => {
+  const context = useContext(CartContext);
+
+  if (!context) {
+    throw new Error('useCart must be used inside CartProvider');
+  }
+
+  return context;
 };
 type CheckoutForm = {
   name: string;
@@ -66,8 +90,7 @@ const readStoredNumber = (key: string) => {
 };
 
 function Home() {
-  const [cart, setCart] = useState<CartLine>({ quantity: 0 });
-  const [cartOpen, setCartOpen] = useState(false);
+  const { cart, setCart, cartOpen, setCartOpen } = useCart();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [loyaltyOpen, setLoyaltyOpen] = useState(false);
   const [coupon, setCoupon] = useState('');
@@ -83,24 +106,25 @@ function Home() {
   const [form, setForm] = useState<CheckoutForm>(emptyCheckoutForm);
   const [musicOffersOpen, setMusicOffersOpen] = useState(false);
 
-  const quantity = cart.quantity;
+  const cartContextValue = {
+  cart,
+  setCart,
+  cartOpen,
+  setCartOpen,
+};
 
-const selectedOffer = offers.find(
-  (offer) => offer.id === cart.offerId
-);
+const quantity = cart.quantity;
+const selectedOffer = offers.find((offer) => offer.id === cart.offerId);
 
-const subtotal = selectedOffer?.price ?? 0;
+const CUSTOM_PRICE = 25000;
+
+const subtotal = cart.custom
+  ? CUSTOM_PRICE * quantity
+  : selectedOffer?.price ?? 0;
 
 const discount = couponApplied ? 5000 : 0;
-
-const loyaltyDiscount = loyaltyApplied
-  ? Math.round(subtotal * 0.3)
-  : 0;
-
-const total = Math.max(
-  0,
-  subtotal - discount - loyaltyDiscount
-);
+const loyaltyDiscount = loyaltyApplied ? Math.round(subtotal * 0.3) : 0;
+const total = Math.max(0, subtotal - discount - loyaltyDiscount);
 
   useEffect(() => {
     window.localStorage.setItem('myoko-loyalty-stamps', String(loyaltyStamps));
@@ -111,6 +135,15 @@ const total = Math.max(
   setCart({
     quantity: offer.quantity,
     offerId: offer.id,
+  });
+
+  setCartOpen(true);
+};
+
+const addCustom = (custom: CartLine['custom'], quantity: number) => {
+  setCart({
+    quantity,
+    custom,
   });
 
   setCartOpen(true);
@@ -176,6 +209,7 @@ const total = Math.max(
   const setField = (field: keyof CheckoutForm, value: string) => setForm((current) => ({ ...current, [field]: value }));
 
   return (
+  <CartContext.Provider value={cartContextValue}>
     <div className="myoko-page noise min-h-[100dvh] bg-background">
       <header className="sticky top-0 z-30 border-b border-foreground/15 bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex h-[74px] max-w-[1280px] items-center justify-between px-5 sm:px-8 lg:px-12">
@@ -500,9 +534,8 @@ const total = Math.max(
       <button
         className="group relative flex min-h-[390px] flex-col justify-between overflow-hidden bg-[#171615] p-5 text-left text-background transition hover:bg-background/10 sm:p-6"
         onClick={() => {
-          // Custom Keychain functionality will be connected next.
-          alert('Custom Keychains are coming next!');
-        }}
+          window.location.href = '/custom';
+                      }}
         data-testid="service-custom-keychains"
       >
         <div className="flex items-start justify-between">
@@ -703,9 +736,8 @@ const total = Math.max(
   <div className="flex flex-1 justify-between">
     <div>
       <h3 className="font-display text-xl font-bold">
-        {selectedOffer?.name ?? 'Your bundle'}
-      </h3>
-
+  {cart.custom ? 'MYOKO Custom' : selectedOffer?.name ?? 'Your bundle'}
+</h3>
       <p className="mt-1 font-mono-brand text-[9px] uppercase tracking-[.13em] text-foreground/50">
         {quantity} keychains
       </p>
@@ -720,7 +752,7 @@ const total = Math.max(
 <div className="border-b border-foreground/15 py-5">
   <div className="flex items-center justify-between">
     <span className="font-mono-brand text-[10px] uppercase tracking-[.15em]">
-      Selected bundle
+      {cart.custom ? 'Custom keychain' : 'Selected bundle'}
     </span>
 
     <span
@@ -731,15 +763,33 @@ const total = Math.max(
     </span>
   </div>
 
-  {selectedOffer && (
-    <div className="mt-4 flex items-center justify-between text-sm">
-      <span>{selectedOffer.name}</span>
-
-      <span className="font-mono-brand text-xs">
-        {money(selectedOffer.price)}
-      </span>
+  {cart.custom ? (
+  <div className="mt-4 space-y-2 text-sm">
+    <div className="flex justify-between gap-4">
+      <span>Custom keychain</span>
+      <span>{money(CUSTOM_PRICE)} each</span>
     </div>
-  )}
+
+    <div className="flex justify-between gap-4 text-foreground/50">
+      <span>Media</span>
+      <span>{cart.custom.media2 ? '2 pieces' : '1 piece'}</span>
+    </div>
+
+    {cart.custom.text && (
+      <div className="flex justify-between gap-4 text-foreground/50">
+        <span>Personalization</span>
+        <span>{cart.custom.text}</span>
+      </div>
+    )}
+  </div>
+) : (
+  selectedOffer && (
+    <div className="mt-4 flex justify-between gap-4">
+      <span>{selectedOffer.name}</span>
+      <span>{money(selectedOffer.price)}</span>
+    </div>
+  )
+)}
 
   <p className="mt-4 text-xs leading-relaxed text-foreground/55">
     This order uses one fixed bundle. Different bundles cannot be combined.
@@ -785,8 +835,9 @@ const total = Math.max(
           </div>
         </div>
       </div>}
-    </div>
-  );
+        </div>
+  </CartContext.Provider>
+);
 }
 
 type AdminOrder = {
@@ -909,12 +960,200 @@ function AdminPage() {
   return <main className="myoko-page noise min-h-[100dvh] bg-background px-5 py-8 sm:px-8 lg:px-12 lg:py-12"><div className="mx-auto max-w-[1280px]"><header className="flex flex-col justify-between gap-5 border-b border-foreground/20 pb-7 sm:flex-row sm:items-end"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.22em] text-primary">Private team area</p><h1 className="mt-2 font-display text-5xl font-bold tracking-[-.08em]">Myoko <span className="text-primary">orders.</span></h1><p className="mt-3 text-sm text-foreground/60">Manage preorders, delivery timing, and handover payment.</p></div><div className="flex gap-3"><button className="focus-ring border border-foreground px-4 py-3 font-mono-brand text-[10px] uppercase tracking-[.12em] hover:bg-foreground hover:text-background" onClick={() => void loadOrders()} disabled={loadingOrders}>{loadingOrders ? 'Refreshing…' : 'Refresh'}</button><button className="focus-ring border border-foreground px-4 py-3 font-mono-brand text-[10px] uppercase tracking-[.12em] hover:bg-foreground hover:text-background" onClick={() => void logout()}>Log out</button></div></header>{error && <p className="mt-6 border border-primary bg-primary/10 px-4 py-3 text-sm text-primary" role="alert">{error}</p>}<div className="mt-8 grid gap-4 sm:grid-cols-3"><div className="border border-foreground/20 bg-secondary p-5"><p className="font-mono-brand text-[9px] uppercase tracking-[.15em]">Total orders</p><p className="mt-3 font-display text-4xl font-bold">{orders.length}</p></div><div className="border border-foreground/20 bg-secondary p-5"><p className="font-mono-brand text-[9px] uppercase tracking-[.15em]">To make</p><p className="mt-3 font-display text-4xl font-bold">{orders.filter((order) => !['completed', 'cancelled'].includes(order.orderStatus)).length}</p></div><div className="border border-foreground/20 bg-secondary p-5"><p className="font-mono-brand text-[9px] uppercase tracking-[.15em]">Unpaid</p><p className="mt-3 font-display text-4xl font-bold">{orders.filter((order) => order.paymentStatus === 'unpaid').length}</p></div></div><div className="mt-8 space-y-5">{orders.length === 0 && <div className="border border-foreground/20 p-10 text-center"><p className="font-display text-2xl font-bold">No orders yet.</p><p className="mt-2 text-sm text-foreground/60">New website orders will appear here.</p></div>}{orders.map((order) => <article key={order.id} className="border border-foreground/20 bg-background p-5 sm:p-7"><div className="flex flex-col justify-between gap-5 border-b border-foreground/15 pb-5 lg:flex-row lg:items-start"><div><div className="flex flex-wrap items-center gap-3"><span className="font-mono-brand text-xs text-primary">{order.orderNumber}</span><span className="font-mono-brand text-[9px] uppercase tracking-[.13em] text-foreground/45">{new Date(order.createdAt).toLocaleString()}</span></div><h2 className="mt-3 font-display text-3xl font-bold tracking-[-.06em]">{order.customerName}</h2><p className="mt-1 text-sm text-foreground/60">{order.className} · {order.school} · {order.albumName}</p></div><div className="text-left lg:text-right"><p className="font-display text-2xl font-bold">{money(order.total)}</p><p className="mt-1 font-mono-brand text-[9px] uppercase tracking-[.12em] text-foreground/50">{order.keychainQuantity} keychains / {order.paymentMethod.replaceAll('_', ' ')}</p></div></div><div className="grid gap-5 py-5 md:grid-cols-[1fr_1fr_.8fr]"><div><p className="font-mono-brand text-[9px] uppercase tracking-[.14em] text-primary">Offers</p><p className="mt-2 text-sm leading-relaxed">{order.offers.map((offer) => `${offer.quantity} × ${offer.name}`).join(' · ')}</p></div><div><p className="font-mono-brand text-[9px] uppercase tracking-[.14em] text-primary">Delivery</p><p className="mt-2 text-sm">{order.deliveryPreference}</p><p className="mt-1 text-sm text-foreground/60">{order.deliveryNotes || 'No extra delivery note.'}</p></div><div><p className="font-mono-brand text-[9px] uppercase tracking-[.14em] text-primary">Payment</p><select value={order.paymentStatus} onChange={(event) => void updateOrder(order.id, { paymentStatus: event.target.value as AdminOrder['paymentStatus'] })} className="form-input mt-2" data-testid={`select-payment-${order.id}`}><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select></div></div><div className="flex flex-col gap-4 border-t border-foreground/15 pt-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-mono-brand text-[9px] uppercase tracking-[.14em] text-primary">Order status</p><select value={order.orderStatus} onChange={(event) => void updateOrder(order.id, { orderStatus: event.target.value as AdminOrder['orderStatus'] })} className="form-input mt-2 sm:w-64" data-testid={`select-order-status-${order.id}`}>{adminOrderStatuses.map((status) => <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>)}</select></div><p className="max-w-sm text-xs leading-relaxed text-foreground/50">The customer selected <strong className="text-foreground/75">{order.deliveryPreference}</strong>. Missing that handover means the order cannot be rescheduled.</p></div></article>)}</div></div></main>;
 }
 
+function CustomPage() {
+  const { setCart, setCartOpen } = useCart();
+  const [media1, setMedia1] = useState('');
+  const [media2, setMedia2] = useState('');
+  const [customText, setCustomText] = useState('');
+  const [quantity, setQuantity] = useState(1);
+
+  return (
+    <main className="myoko-page min-h-[100dvh] bg-background px-5 py-8 sm:px-8 lg:px-12 lg:py-12">
+      <div className="mx-auto max-w-[1100px]">
+
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          className="font-mono-brand text-[10px] uppercase tracking-[.15em] text-foreground/50 hover:text-primary"
+        >
+          ← Back
+        </button>
+
+        <header className="mt-12 max-w-3xl">
+          <p className="font-mono-brand text-[10px] uppercase tracking-[.22em] text-primary">
+            08 / Build your own
+          </p>
+
+          <h1 className="mt-3 font-display text-6xl font-bold tracking-[-.08em] sm:text-7xl">
+            MYOKO <span className="text-primary">Custom.</span>
+          </h1>
+
+          <p className="mt-5 max-w-xl text-sm leading-relaxed text-foreground/60">
+            Build your own music keychain with up to two pieces of media.
+          </p>
+        </header>
+
+        <div className="mt-12 grid gap-6 lg:grid-cols-[1.4fr_.8fr]">
+
+          <section className="border border-foreground/15 p-6 sm:p-8">
+
+            <div>
+              <p className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-primary">
+                01 / First media
+              </p>
+
+              <input
+                value={media1}
+                onChange={(event) => setMedia1(event.target.value)}
+                className="form-input mt-3 w-full"
+                placeholder="Song title / artist / link"
+              />
+            </div>
+
+            <div className="mt-8">
+              <p className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-primary">
+                02 / Second media
+              </p>
+
+              <input
+                value={media2}
+                onChange={(event) => setMedia2(event.target.value)}
+                className="form-input mt-3 w-full"
+                placeholder="Optional"
+              />
+            </div>
+
+            <div className="mt-8">
+              <p className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-primary">
+                03 / Personalization
+              </p>
+
+              <input
+                value={customText}
+                onChange={(event) => setCustomText(event.target.value)}
+                className="form-input mt-3 w-full"
+                placeholder="Name or text on the keychain"
+                maxLength={40}
+              />
+            </div>
+
+            <div className="mt-8">
+              <p className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-primary">
+                04 / Quantity
+              </p>
+
+              <div className="mt-3 flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+                  className="border border-foreground px-4 py-3"
+                >
+                  −
+                </button>
+
+                <span className="min-w-8 text-center font-display text-2xl font-bold">
+                  {quantity}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setQuantity((value) => value + 1)}
+                  className="border border-foreground px-4 py-3"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+          </section>
+
+          <aside className="h-fit bg-[#171615] p-6 text-background sm:p-8">
+
+            <p className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
+              Custom keychain
+            </p>
+
+            <h2 className="mt-3 font-display text-3xl font-bold tracking-[-.05em]">
+              Your build.
+            </h2>
+
+            <div className="mt-8 space-y-4 border-t border-background/15 pt-5 text-sm">
+              <div className="flex justify-between gap-4">
+                <span className="text-background/50">Media</span>
+                <span>{media2 ? '2 pieces' : '1 piece'}</span>
+              </div>
+
+              <div className="flex justify-between gap-4">
+                <span className="text-background/50">Quantity</span>
+                <span>{quantity}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={!media1.trim()}
+              className="mt-8 w-full bg-primary px-5 py-4 font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={() => {
+  setCart({
+    quantity,
+    custom: {
+      media1: media1.trim(),
+      ...(media2.trim() ? { media2: media2.trim() } : {}),
+      ...(customText.trim() ? { text: customText.trim() } : {}),
+    },
+  });
+
+  setCartOpen(true);
+}}
+            >
+              Add custom keychain
+            </button>
+
+          </aside>
+
+        </div>
+      </div>
+    </main>
+  );
+}
+
 function Router() {
-  return <Switch><Route path="/" component={Home} /><Route path="/admin" component={AdminPage} /><Route component={NotFound} /></Switch>;
+  return (
+    <Switch>
+      <Route path="/" component={Home} />
+      <Route path="/custom" component={CustomPage} />
+      <Route path="/admin" component={AdminPage} />
+      <Route component={NotFound} />
+    </Switch>
+  );
 }
 
 function App() {
-  return <QueryClientProvider client={queryClient}><TooltipProvider><WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}><ErrorBoundary resetKey={useLocation()[0]}><Router /></ErrorBoundary></WouterRouter><Toaster /></TooltipProvider></QueryClientProvider>;
+  const [cart, setCart] = useState<CartLine>({ quantity: 0 });
+  const [cartOpen, setCartOpen] = useState(false);
+
+  const cartContextValue = {
+    cart,
+    setCart,
+    cartOpen,
+    setCartOpen,
+  };
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <CartContext.Provider value={cartContextValue}>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+            <ErrorBoundary resetKey={useLocation()[0]}>
+              <Router />
+            </ErrorBoundary>
+          </WouterRouter>
+        </CartContext.Provider>
+
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
 }
 
 export default App;
