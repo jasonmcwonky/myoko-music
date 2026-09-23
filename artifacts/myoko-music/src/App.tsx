@@ -91,7 +91,7 @@ const readStoredNumber = (key: string) => {
 
 function Home() {
   const { cart, setCart, cartOpen, setCartOpen } = useCart();
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [loyaltyOpen, setLoyaltyOpen] = useState(false);
   const [coupon, setCoupon] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
@@ -820,7 +820,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
   type="button"
   className="focus-ring flex w-full items-center justify-center gap-3 bg-primary px-5 py-4 font-mono-brand text-[11px] uppercase tracking-[.15em] text-primary-foreground transition hover:bg-accent"
   onClick={() => {
-    setCheckoutOpen(true);
+    setIsCheckoutOpen(true);
     setCartOpen(false);
   }}
   data-testid="button-checkout"
@@ -830,10 +830,10 @@ const setField = (field: keyof CheckoutForm, value: string) =>
         </div>
       </div>}
 
-      {checkoutOpen && <div className="fixed inset-0 z-[60] overflow-y-auto bg-foreground/60 px-4 py-6 sm:px-8 sm:py-12" role="dialog" aria-modal="true" aria-label="Demo checkout">
+      {isCheckoutOpen && <div className="fixed inset-0 z-[60] overflow-y-auto bg-foreground/60 px-4 py-6 sm:px-8 sm:py-12" role="dialog" aria-modal="true" aria-label="Demo checkout">
         <div className="mx-auto max-w-3xl bg-background">
-          {orderComplete ? <div className="flex min-h-[550px] flex-col items-center justify-center px-6 py-16 text-center sm:px-16"><div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent text-background"><Check size={38} strokeWidth={2} /></div><p className="mt-8 font-mono-brand text-[10px] uppercase tracking-[.22em] text-primary">Your order is saved</p><h2 className="mt-4 font-display text-5xl font-bold leading-[.9] tracking-[-.08em] sm:text-7xl">See you<br /><span className="text-primary">at school.</span></h2><p className="mt-6 max-w-md text-sm leading-relaxed text-foreground/60">We’ll make your keychains and meet you during your selected delivery time. Payment is collected at handover by cash or your agreed QR method.</p><div className="mt-8 border border-foreground px-5 py-3 font-mono-brand text-xs tracking-[.12em]" data-testid="text-order-reference">ORDER REF / {orderReference}</div><button className="focus-ring mt-8 flex items-center gap-3 border border-foreground px-5 py-3 font-mono-brand text-[10px] uppercase tracking-[.14em] hover:bg-foreground hover:text-background" onClick={() => { setCheckoutOpen(false); resetCheckout(); }} data-testid="button-close-confirmation">Back to Myoko <ArrowRight size={14} /></button></div> : <form onSubmit={completeCheckout} className="p-6 sm:p-10">
-            <div className="flex items-start justify-between border-b border-foreground/20 pb-7"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.2em] text-primary">Reserve your keychains</p><h2 className="mt-2 font-display text-4xl font-bold tracking-[-.07em]">Make it yours.</h2><p className="mt-2 max-w-md text-sm text-foreground/60">Place a real preorder. We’ll collect payment when we give it to you at school. Closing this window clears the bag.</p></div><button type="button" className="focus-ring p-2" onClick={() => { setCheckoutOpen(false); resetCheckout(); }} aria-label="Close checkout and clear it" data-testid="button-close-checkout"><X size={20} /></button></div>
+          {orderComplete ? <div className="flex min-h-[550px] flex-col items-center justify-center px-6 py-16 text-center sm:px-16"><div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent text-background"><Check size={38} strokeWidth={2} /></div><p className="mt-8 font-mono-brand text-[10px] uppercase tracking-[.22em] text-primary">Your order is saved</p><h2 className="mt-4 font-display text-5xl font-bold leading-[.9] tracking-[-.08em] sm:text-7xl">See you<br /><span className="text-primary">at school.</span></h2><p className="mt-6 max-w-md text-sm leading-relaxed text-foreground/60">We’ll make your keychains and meet you during your selected delivery time. Payment is collected at handover by cash or your agreed QR method.</p><div className="mt-8 border border-foreground px-5 py-3 font-mono-brand text-xs tracking-[.12em]" data-testid="text-order-reference">ORDER REF / {orderReference}</div><button className="focus-ring mt-8 flex items-center gap-3 border border-foreground px-5 py-3 font-mono-brand text-[10px] uppercase tracking-[.14em] hover:bg-foreground hover:text-background" onClick={() => { setIsCheckoutOpen(false); resetCheckout(); }} data-testid="button-close-confirmation">Back to Myoko <ArrowRight size={14} /></button></div> : <form onSubmit={completeCheckout} className="p-6 sm:p-10">
+            <div className="flex items-start justify-between border-b border-foreground/20 pb-7"><div><p className="font-mono-brand text-[10px] uppercase tracking-[.2em] text-primary">Reserve your keychains</p><h2 className="mt-2 font-display text-4xl font-bold tracking-[-.07em]">Make it yours.</h2><p className="mt-2 max-w-md text-sm text-foreground/60">Place a real preorder. We’ll collect payment when we give it to you at school. Closing this window clears the bag.</p></div><button type="button" className="focus-ring p-2" onClick={() => { setIsCheckoutOpen(false); resetCheckout(); }} aria-label="Close checkout and clear it" data-testid="button-close-checkout"><X size={20} /></button></div>
             <div className="mt-8 grid gap-x-6 gap-y-5 sm:grid-cols-2">
               <label className="sm:col-span-2"><span className="form-label">1. Name <span className="text-primary">*</span></span><input required value={form.name} onChange={(e) => setField('name', e.target.value)} className="form-input" placeholder="Your name" data-testid="input-checkout-name" /></label>
               <label><span className="form-label">2. Class <span className="text-primary">*</span></span><input required value={form.className} onChange={(e) => setField('className', e.target.value)} className="form-input" placeholder="For example: 10A" data-testid="input-checkout-class" /></label>
@@ -987,7 +987,7 @@ function AdminPage() {
 }
 
 function CustomPage() {
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const { setCart, setCartOpen } = useCart();
   const [media1, setMedia1] = useState('');
   const [media2, setMedia2] = useState('');
@@ -1121,7 +1121,7 @@ function CustomPage() {
   className="focus-ring flex w-full items-center justify-center gap-3 bg-primary px-5 py-4 font-mono-brand text-[11px] uppercase tracking-[.15em] text-primary-foreground"
   onClick={() => {
     console.log("CHECKOUT CLICKED");
-    setCheckoutOpen(true);
+    setIsCheckoutOpen(true);
   }}
 >
   Continue to demo checkout
