@@ -89,6 +89,82 @@ const readStoredNumber = (key: string) => {
   return Number.isFinite(stored) && stored >= 0 ? stored : 0;
 };
 
+type MyokoService = {
+  id: string;
+  name: string;
+  bannerText: string;
+  description: string;
+  image: string;
+  path: string;
+};
+
+const myokoServices: MyokoService[] = [
+  {
+    id: 'music',
+    name: 'MYOKO Music',
+    bannerText: 'Make your own kind of music',
+    description: 'Turn your favorite album into something you can carry everywhere.',
+    image: musicKeychainImage,
+    path: '/',
+  },
+  {
+    id: 'pay',
+    name: 'MYOKO Pay',
+    bannerText: 'Make your own kind of Pay',
+    description: 'Tap, scan and make payments easier.',
+    image: payKeychainImage,
+    path: '/pay',
+  },
+  {
+    id: 'invite',
+    name: 'MYOKO Invite',
+    bannerText: 'Make your own kind of Invite',
+    description: 'Share invitations and special moments in a new way.',
+    image: inviteKeychainImage,
+    path: '/invite',
+  },
+  {
+    id: 'business',
+    name: 'MYOKO Business',
+    bannerText: 'Make your own kind of Business',
+    description: 'A smart little keychain for your brand or business.',
+    image: businessKeychainImage,
+    path: '/business',
+  },
+  {
+    id: 'id',
+    name: 'MYOKO ID',
+    bannerText: 'Make your own kind of ID',
+    description: 'Keep important identification information close.',
+    image: idKeychainImage,
+    path: '/id',
+  },
+  {
+    id: 'social',
+    name: 'MYOKO Social Media',
+    bannerText: 'Make your own kind of Social Media',
+    description: 'Put your socials one scan away.',
+    image: socialKeychainImage,
+    path: '/social',
+  },
+  {
+    id: 'memory',
+    name: 'MYOKO Memory',
+    bannerText: 'Make your own kind of memory',
+    description: 'Keep a memory, photo or moment with you.',
+    image: memoryKeychainImage,
+    path: '/memory',
+  },
+  {
+    id: 'custom',
+    name: 'MYOKO Custom',
+    bannerText: 'Make your own kind of custom keychain',
+    description: 'Build your own keychain with up to two pieces of media.',
+    image: customKeychainImage,
+    path: '/custom',
+  },
+];
+
 function Home() {
   const { cart, setCart, cartOpen, setCartOpen } = useCart();
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -98,6 +174,7 @@ function Home() {
   const [loyaltyStamps, setLoyaltyStamps] = useState(() => readStoredNumber('myoko-loyalty-stamps'));
   const [loyaltyRewardAvailable, setLoyaltyRewardAvailable] = useState(() => typeof window !== 'undefined' && window.localStorage.getItem('myoko-loyalty-reward') === 'true');
   const [loyaltyApplied, setLoyaltyApplied] = useState(false);
+  const [activeService, setActiveService] = useState('music');
   const [orderComplete, setOrderComplete] = useState(false);
   const [orderReference, setOrderReference] = useState('');
   const [checkoutError, setCheckoutError] = useState('');
@@ -290,10 +367,15 @@ const setField = (field: keyof CheckoutForm, value: string) =>
         </section>
 
         <div className="overflow-hidden border-y border-foreground bg-primary py-3 text-primary-foreground">
-          <div className="ticker-track flex w-max whitespace-nowrap font-mono-brand text-[10px] uppercase tracking-[.2em]">
-            {Array.from({ length: 6 }, (_, i) => <span key={i} className="mx-6">Make your own kind of music <span className="mx-6 text-secondary">✦</span></span>)}
-          </div>
-        </div>
+  <div className="ticker-track flex w-max whitespace-nowrap font-mono-brand text-[10px] uppercase tracking-[.2em]">
+    {Array.from({ length: 6 }, (_, i) => (
+      <span key={i} className="mx-6">
+        {myokoServices.find((service) => service.id === activeService)?.bannerText}
+        <span className="mx-6 text-secondary">✦</span>
+      </span>
+    ))}
+  </div>
+</div>
 
         <section id="listen" className="bg-foreground px-5 py-20 text-background sm:px-8 lg:px-12 lg:py-28">
   <div className="mx-auto max-w-[1280px]">
@@ -361,11 +443,12 @@ const setField = (field: keyof CheckoutForm, value: string) =>
       >
         <div className="flex items-start justify-between">
           <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
-            02 / Coming Soon
+            02 / AVAILABLE
           </span>
-          <span className="font-mono-brand text-[9px] text-background/35">
-            SOON
-          </span>
+          <ArrowRight
+            size={16}
+            className="transition-transform group-hover:translate-x-1"
+          />
         </div>
 
         <div className="flex flex-1 items-center justify-center py-8">
@@ -393,11 +476,12 @@ const setField = (field: keyof CheckoutForm, value: string) =>
       >
         <div className="flex items-start justify-between">
           <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
-            03 / Coming Soon
+            03 / AVAILABLE
           </span>
-          <span className="font-mono-brand text-[9px] text-background/35">
-            SOON
-          </span>
+          <ArrowRight
+            size={16}
+            className="transition-transform group-hover:translate-x-1"
+          />
         </div>
 
         <div className="flex flex-1 items-center justify-center py-8">
@@ -425,11 +509,12 @@ const setField = (field: keyof CheckoutForm, value: string) =>
       >
         <div className="flex items-start justify-between">
           <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
-            04 / Coming Soon
+            04 / AVAILABLE
           </span>
-          <span className="font-mono-brand text-[9px] text-background/35">
-            SOON
-          </span>
+          <ArrowRight
+            size={16}
+            className="transition-transform group-hover:translate-x-1"
+          />
         </div>
 
         <div className="flex flex-1 items-center justify-center py-8">
@@ -457,11 +542,12 @@ const setField = (field: keyof CheckoutForm, value: string) =>
       >
         <div className="flex items-start justify-between">
           <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
-            05 / Coming Soon
+            05 / AVAILABLE
           </span>
-          <span className="font-mono-brand text-[9px] text-background/35">
-            SOON
-          </span>
+          <ArrowRight
+            size={16}
+            className="transition-transform group-hover:translate-x-1"
+          />
         </div>
 
         <div className="flex flex-1 items-center justify-center py-8">
@@ -489,11 +575,12 @@ const setField = (field: keyof CheckoutForm, value: string) =>
       >
         <div className="flex items-start justify-between">
           <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
-            06 / Coming Soon
+            06 / AVAILABLE
           </span>
-          <span className="font-mono-brand text-[9px] text-background/35">
-            SOON
-          </span>
+          <ArrowRight
+            size={16}
+            className="transition-transform group-hover:translate-x-1"
+          />
         </div>
 
         <div className="flex flex-1 items-center justify-center py-8">
@@ -521,11 +608,12 @@ const setField = (field: keyof CheckoutForm, value: string) =>
       >
         <div className="flex items-start justify-between">
           <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
-            07 / Coming Soon
+            07 / AVAILABLE
           </span>
-          <span className="font-mono-brand text-[9px] text-background/35">
-            SOON
-          </span>
+          <ArrowRight
+            size={16}
+            className="transition-transform group-hover:translate-x-1"
+          />
         </div>
 
         <div className="flex flex-1 items-center justify-center py-8">
@@ -838,7 +926,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
               <label className="sm:col-span-2"><span className="form-label">1. Name <span className="text-primary">*</span></span><input required value={form.name} onChange={(e) => setField('name', e.target.value)} className="form-input" placeholder="Your name" data-testid="input-checkout-name" /></label>
               <label><span className="form-label">2. Class <span className="text-primary">*</span></span><input required value={form.className} onChange={(e) => setField('className', e.target.value)} className="form-input" placeholder="For example: 10A" data-testid="input-checkout-class" /></label>
               <label><span className="form-label">3. School <span className="text-primary">*</span></span><input required value={form.school} onChange={(e) => setField('school', e.target.value)} className="form-input" placeholder="Your school" data-testid="input-checkout-school" /></label>
-              <label className="sm:col-span-2"><span className="form-label">4. Album name <span className="text-primary">*</span></span><input required value={form.albumName} onChange={(e) => setField('albumName', e.target.value)} className="form-input" placeholder="The album name for your keychain" data-testid="input-checkout-album" /></label>
+              <label className="sm:col-span-2"><span className="form-label">4. Album name(Maximum Songs you can put is 20.) <span className="text-primary">*</span></span><input required value={form.albumName} onChange={(e) => setField('albumName', e.target.value)} className="form-input" placeholder="The album name for your keychain" data-testid="input-checkout-album" /></label>
               <label className="sm:col-span-2"><span className="form-label">5. Delivery preference <span className="text-primary">*</span></span><select required value={form.deliveryPreference} onChange={(e) => setField('deliveryPreference', e.target.value)} className="form-input" data-testid="input-checkout-delivery"><option value="" disabled>Select a delivery time</option>{deliveryOptions.map((option) => <option key={option}>{option}</option>)}</select><span className="mt-2 block text-xs leading-relaxed text-foreground/55">Not receiving the delivery at the chosen time means that you need to order again. It cannot be rescheduled.</span></label>
               <label className="sm:col-span-2"><span className="form-label">6. Other notes for delivery <span className="text-foreground/45">(optional)</span></span><textarea value={form.deliveryNotes} onChange={(e) => setField('deliveryNotes', e.target.value)} className="form-input min-h-24 resize-y" placeholder="For example: the meeting area to exchange and get the product" data-testid="input-checkout-delivery-notes" /></label>
             </div>
