@@ -818,14 +818,13 @@ const setField = (field: keyof CheckoutForm, value: string) =>
           </div>
           {quantity > 0 && <div className="border-t border-foreground/20 px-6 py-6"><p className="mb-4 text-center font-mono-brand text-[9px] uppercase tracking-[.12em] text-foreground/50">Checkout is a demo — no payment will be charged</p><button
   type="button"
-  className="focus-ring flex w-full items-center justify-center gap-3 bg-primary px-5 py-4 font-mono-brand text-[11px] uppercase tracking-[.15em] text-primary-foreground transition hover:bg-accent"
+  className="focus-ring flex w-full items-center justify-center gap-3 bg-primary px-5 py-4 font-mono-brand text-[11px] uppercase tracking-[.15em] text-primary-foreground"
   onClick={() => {
-    setCheckoutOpen(true);
-    setCartOpen(false);
+    alert("CHECKOUT BUTTON WORKS");
   }}
-  data-testid="button-checkout"
 >
-  Continue to demo checkout <ArrowRight size={15} />
+  TEST CHECKOUT
+  <ArrowRight size={15} />
 </button></div>}
         </div>
       </div>}
