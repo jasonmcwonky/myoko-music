@@ -816,7 +816,17 @@ const setField = (field: keyof CheckoutForm, value: string) =>
                <div className="space-y-3 pt-6 text-sm"><div className="flex justify-between"><span className="text-foreground/55">Subtotal</span><span data-testid="text-subtotal">{money(subtotal)}</span></div>{couponApplied && <div className="flex justify-between text-accent"><span>Coupon</span><span>-{money(discount)}</span></div>}{loyaltyApplied && <div className="flex justify-between text-accent"><span>Loyalty reward</span><span>-{money(loyaltyDiscount)}</span></div>}{loyaltyApplied && <div className="flex justify-between text-foreground/55"><span>Keychains included</span><span>{quantity + 1}</span></div>}<div className="flex justify-between border-t border-foreground/20 pt-4 font-display text-xl font-bold"><span>Total</span><span data-testid="text-cart-total">{money(total)}</span></div></div>
             </div>}
           </div>
-          {quantity > 0 && <div className="border-t border-foreground/20 px-6 py-6"><p className="mb-4 text-center font-mono-brand text-[9px] uppercase tracking-[.12em] text-foreground/50">Checkout is a demo — no payment will be charged</p><button className="focus-ring flex w-full items-center justify-center gap-3 bg-primary px-5 py-4 font-mono-brand text-[11px] uppercase tracking-[.15em] text-primary-foreground transition hover:bg-accent" onClick={() => { setCartOpen(false); setCheckoutOpen(true); }} data-testid="button-checkout">Continue to demo checkout <ArrowRight size={15} /></button></div>}
+          {quantity > 0 && <div className="border-t border-foreground/20 px-6 py-6"><p className="mb-4 text-center font-mono-brand text-[9px] uppercase tracking-[.12em] text-foreground/50">Checkout is a demo — no payment will be charged</p><button
+  type="button"
+  className="focus-ring flex w-full items-center justify-center gap-3 bg-primary px-5 py-4 font-mono-brand text-[11px] uppercase tracking-[.15em] text-primary-foreground transition hover:bg-accent"
+  onClick={() => {
+    setCheckoutOpen(true);
+    setCartOpen(false);
+  }}
+  data-testid="button-checkout"
+>
+  Continue to demo checkout <ArrowRight size={15} />
+</button></div>}
         </div>
       </div>}
 
