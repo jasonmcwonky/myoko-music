@@ -987,6 +987,7 @@ function AdminPage() {
 }
 
 function CustomPage() {
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const { setCart, setCartOpen } = useCart();
   const [media1, setMedia1] = useState('');
   const [media2, setMedia2] = useState('');
@@ -1119,10 +1120,11 @@ function CustomPage() {
   type="button"
   className="focus-ring flex w-full items-center justify-center gap-3 bg-primary px-5 py-4 font-mono-brand text-[11px] uppercase tracking-[.15em] text-primary-foreground"
   onClick={() => {
-    alert("CHECKOUT BUTTON WORKS");
+    console.log("CHECKOUT CLICKED");
+    setCheckoutOpen(true);
   }}
 >
-  TEST CHECKOUT
+  Continue to demo checkout
   <ArrowRight size={15} />
 </button>
 
