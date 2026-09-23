@@ -818,13 +818,14 @@ const setField = (field: keyof CheckoutForm, value: string) =>
           </div>
           {quantity > 0 && <div className="border-t border-foreground/20 px-6 py-6"><p className="mb-4 text-center font-mono-brand text-[9px] uppercase tracking-[.12em] text-foreground/50">Checkout is a demo — no payment will be charged</p><button
   type="button"
-  className="focus-ring flex w-full items-center justify-center gap-3 bg-primary px-5 py-4 font-mono-brand text-[11px] uppercase tracking-[.15em] text-primary-foreground"
+  className="focus-ring flex w-full items-center justify-center gap-3 bg-primary px-5 py-4 font-mono-brand text-[11px] uppercase tracking-[.15em] text-primary-foreground transition hover:bg-accent"
   onClick={() => {
-    alert("CHECKOUT BUTTON WORKS");
+    setCheckoutOpen(true);
+    setCartOpen(false);
   }}
+  data-testid="button-checkout"
 >
-  TEST CHECKOUT
-  <ArrowRight size={15} />
+  Continue to demo checkout <ArrowRight size={15} />
 </button></div>}
         </div>
       </div>}
@@ -1116,28 +1117,13 @@ function CustomPage() {
 
             <button
   type="button"
-  disabled={!media1.trim()}
-  className="mt-8 w-full bg-primary px-5 py-4 font-mono-brand text-[10px] uppercase tracking-[.15em] text-primary-foreground transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
+  className="focus-ring flex w-full items-center justify-center gap-3 bg-primary px-5 py-4 font-mono-brand text-[11px] uppercase tracking-[.15em] text-primary-foreground"
   onClick={() => {
-    const firstMedia = media1.trim();
-    const secondMedia = media2.trim();
-    const personalization = customText.trim();
-
-    if (!firstMedia) return;
-
-    setCart({
-      quantity,
-      custom: {
-        media1: firstMedia,
-        ...(secondMedia ? { media2: secondMedia } : {}),
-        ...(personalization ? { text: personalization } : {}),
-      },
-    });
-
-    setCartOpen(true);
+    alert("CHECKOUT BUTTON WORKS");
   }}
 >
-  Add custom keychain
+  TEST CHECKOUT
+  <ArrowRight size={15} />
 </button>
 
           </aside>
