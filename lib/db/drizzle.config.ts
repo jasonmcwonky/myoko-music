@@ -14,7 +14,7 @@ if (!databaseUrl) {
 }
 
 export default defineConfig({
-  schema: "./src/schema/orders.ts",
+  schema: "./src/schema/index.ts",
   dialect: "postgresql",
   dbCredentials: {
     url: databaseUrl,
