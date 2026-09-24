@@ -338,7 +338,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
       <main id="top">
         <section className="relative mx-auto grid min-h-[650px] max-w-[1280px] items-center gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[1.02fr_.98fr] lg:px-12 lg:py-24">
           <div className="relative z-10">
-            <p className="reveal font-mono-brand text-[10px] uppercase tracking-[.25em] text-primary">MYOKO Music / Vientiane, Laos</p>
+            <p className="reveal font-mono-brand text-[10px] uppercase tracking-[.25em] text-primary">MYOKO Group / Vientiane, Laos</p>
             <h1 className="reveal reveal-delay-1 mt-6 max-w-3xl font-display text-[clamp(4rem,10vw,9.3rem)] font-extrabold leading-[.82] tracking-[-.095em]">
               MAKE YOUR<br /><span className="text-primary">OWN</span><br />KIND OF...
             </h1>
