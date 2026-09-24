@@ -181,6 +181,8 @@ function Home() {
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [form, setForm] = useState<CheckoutForm>(emptyCheckoutForm);
+  const [tickerText, setTickerText] = useState(myokoServices[0].bannerText);
+  const [tickerVisible, setTickerVisible] = useState(true);
   const [musicOffersOpen, setMusicOffersOpen] = useState(false);
 
   const cartContextValue = {
@@ -296,6 +298,35 @@ const total = Math.max(0, subtotal - discount - loyaltyDiscount);
   } finally {
     setSubmittingOrder(false);
   }
+
+  // Rotate through services
+useEffect(() => {
+  const interval = setInterval(() => {
+    setActiveService((current) => {
+      const index = myokoServices.findIndex((service) => service.id === current);
+      const nextIndex = (index + 1) % myokoServices.length;
+      return myokoServices[nextIndex].id;
+    });
+  }, 3000);
+
+  return () => clearInterval(interval);
+}, []);
+
+// Crossfade the ticker text whenever activeService changes
+useEffect(() => {
+  const nextText = myokoServices.find((service) => service.id === activeService)?.bannerText ?? '';
+  if (nextText === tickerText) return;
+
+  setTickerVisible(false); // fade + slide out
+
+  const swapTimeout = setTimeout(() => {
+    setTickerText(nextText);
+    setTickerVisible(true); // fade + slide in
+  }, 250);
+
+  return () => clearTimeout(swapTimeout);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [activeService]);
 };
 
 const setField = (field: keyof CheckoutForm, value: string) =>
@@ -338,7 +369,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
       <main id="top">
         <section className="relative mx-auto grid min-h-[650px] max-w-[1280px] items-center gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[1.02fr_.98fr] lg:px-12 lg:py-24">
           <div className="relative z-10">
-            <p className="reveal font-mono-brand text-[10px] uppercase tracking-[.25em] text-primary">MYOKO Group / Vientiane, Laos</p>
+            <p className="reveal font-mono-brand text-[10px] uppercase tracking-[.25em] text-primary">MYOKO / Vientiane, Laos</p>
             <h1 className="reveal reveal-delay-1 mt-6 max-w-3xl font-display text-[clamp(4rem,10vw,9.3rem)] font-extrabold leading-[.82] tracking-[-.095em]">
               MAKE YOUR<br /><span className="text-primary">OWN</span><br />KIND OF...
             </h1>
@@ -369,8 +400,14 @@ const setField = (field: keyof CheckoutForm, value: string) =>
         <div className="overflow-hidden border-y border-foreground bg-primary py-3 text-primary-foreground">
   <div className="ticker-track flex w-max whitespace-nowrap font-mono-brand text-[10px] uppercase tracking-[.2em]">
     {Array.from({ length: 6 }, (_, i) => (
-      <span key={i} className="mx-6">
-        {myokoServices.find((service) => service.id === activeService)?.bannerText}
+      <span key={i} className="mx-6 inline-flex items-center">
+        <span
+          className={`inline-block transition-all duration-300 ease-out ${
+            tickerVisible ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'
+          }`}
+        >
+          {tickerText}
+        </span>
         <span className="mx-6 text-secondary">✦</span>
       </span>
     ))}
@@ -626,7 +663,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
 
         <div>
           <h3 className="font-display text-2xl font-bold tracking-[-.05em]">
-            MYOKO Keychains
+            MYOKO Memory
           </h3>
           <p className="mt-2 text-xs leading-relaxed text-background/45">
             Keep a memory, photo or moment with you.
