@@ -210,6 +210,34 @@ const total = Math.max(0, subtotal - discount - loyaltyDiscount);
     window.localStorage.setItem('myoko-loyalty-reward', String(loyaltyRewardAvailable));
   }, [loyaltyRewardAvailable, loyaltyStamps]);
 
+  useEffect(() => {
+  const interval = setInterval(() => {
+    setActiveService((current) => {
+      const index = myokoServices.findIndex((service) => service.id === current);
+      const nextIndex = (index + 1) % myokoServices.length;
+      return myokoServices[nextIndex].id;
+    });
+  }, 3000);
+
+  return () => clearInterval(interval);
+}, []);
+
+// Crossfade the ticker text whenever activeService changes
+useEffect(() => {
+  const nextText = myokoServices.find((service) => service.id === activeService)?.bannerText ?? '';
+  if (nextText === tickerText) return;
+
+  setTickerVisible(false);
+
+  const swapTimeout = setTimeout(() => {
+    setTickerText(nextText);
+    setTickerVisible(true);
+  }, 250);
+
+  return () => clearTimeout(swapTimeout);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [activeService]);
+
   const addOffer = (offer: Offer) => {
   setCart({
     quantity: offer.quantity,
@@ -298,35 +326,6 @@ const total = Math.max(0, subtotal - discount - loyaltyDiscount);
   } finally {
     setSubmittingOrder(false);
   }
-
-  // Rotate through services
-useEffect(() => {
-  const interval = setInterval(() => {
-    setActiveService((current) => {
-      const index = myokoServices.findIndex((service) => service.id === current);
-      const nextIndex = (index + 1) % myokoServices.length;
-      return myokoServices[nextIndex].id;
-    });
-  }, 3000);
-
-  return () => clearInterval(interval);
-}, []);
-
-// Crossfade the ticker text whenever activeService changes
-useEffect(() => {
-  const nextText = myokoServices.find((service) => service.id === activeService)?.bannerText ?? '';
-  if (nextText === tickerText) return;
-
-  setTickerVisible(false); // fade + slide out
-
-  const swapTimeout = setTimeout(() => {
-    setTickerText(nextText);
-    setTickerVisible(true); // fade + slide in
-  }, 250);
-
-  return () => clearTimeout(swapTimeout);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [activeService]);
 };
 
 const setField = (field: keyof CheckoutForm, value: string) =>
