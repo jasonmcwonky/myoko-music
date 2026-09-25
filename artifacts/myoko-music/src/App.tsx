@@ -855,7 +855,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
 
       <footer className="bg-foreground px-5 py-8 text-background sm:px-8 lg:px-12">
         <div className="mx-auto flex max-w-[1280px] flex-col justify-between gap-5 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-3"><img src={logoImage} alt="" className="h-9 w-9 rounded-full object-cover" /><span className="font-display text-lg font-bold">MYOKO MUSIC</span></div>
+          <div className="flex items-center gap-3"><img src={logoImage} alt="" className="h-9 w-9 rounded-full object-cover" /><span className="font-display text-lg font-bold">MYOKO</span></div>
           <p className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/50">Built by students / made for listeners / 2025</p>
           <button className="focus-ring self-start font-mono-brand text-[9px] uppercase tracking-[.15em] underline underline-offset-4 sm:self-auto" onClick={() => goTo('top')} data-testid="button-back-top">Back to top ↑</button>
         </div>
