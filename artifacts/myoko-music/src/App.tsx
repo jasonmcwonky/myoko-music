@@ -476,7 +476,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
       >
         <div className="flex items-start justify-between">
           <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
-            02 / AVAILABLE
+            02 / PAY WITH EASE
           </span>
           <ArrowRight
             size={16}
@@ -509,7 +509,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
       >
         <div className="flex items-start justify-between">
           <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
-            03 / AVAILABLE
+            03 / INVITE YOUR FAVOURITE MEDIA
           </span>
           <ArrowRight
             size={16}
@@ -542,7 +542,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
       >
         <div className="flex items-start justify-between">
           <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
-            04 / AVAILABLE
+            04 / SUCCESS YOUR BUSINESS
           </span>
           <ArrowRight
             size={16}
@@ -575,7 +575,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
       >
         <div className="flex items-start justify-between">
           <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
-            05 / AVAILABLE
+            05 / MAKE YOUR PROFESSION ID
           </span>
           <ArrowRight
             size={16}
@@ -608,7 +608,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
       >
         <div className="flex items-start justify-between">
           <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
-            06 / AVAILABLE
+            06 / POST ALL OF IT
           </span>
           <ArrowRight
             size={16}
@@ -641,7 +641,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
       >
         <div className="flex items-start justify-between">
           <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
-            07 / AVAILABLE
+            07 / MAKE YOUR MEMORIES
           </span>
           <ArrowRight
             size={16}
