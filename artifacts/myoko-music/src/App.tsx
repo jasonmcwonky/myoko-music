@@ -377,7 +377,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
               <p className="text-balance text-base leading-relaxed text-foreground/70">Keychains filled with your favorite music, endorsed with the feelings you love. Customized NFC sheet music keychains.</p>
             </div>
             <div className="reveal reveal-delay-3 mt-9 flex flex-wrap items-center gap-4">
-              <button className="focus-ring hard-shadow group flex items-center gap-3 bg-primary px-5 py-3 font-mono-brand text-[11px] uppercase tracking-[.16em] text-primary-foreground transition hover:translate-x-1 hover:translate-y-1 hover:shadow-none" onClick={() => goTo('listen')} data-testid="button-hero-shop">Find your sound <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" /></button>
+              <button className="focus-ring hard-shadow group flex items-center gap-3 bg-primary px-5 py-3 font-mono-brand text-[11px] uppercase tracking-[.16em] text-primary-foreground transition hover:translate-x-1 hover:translate-y-1 hover:shadow-none" onClick={() => goTo('listen')} data-testid="button-hero-shop">Find your media <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" /></button>
               <button className="focus-ring flex items-center gap-2 px-2 py-3 font-mono-brand text-[10px] uppercase tracking-[.14em] underline decoration-1 underline-offset-4" onClick={() => goTo('story')} data-testid="button-hero-story">Why Myoko <ArrowDown size={13} /></button>
             </div>
           </div>
@@ -389,9 +389,6 @@ const setField = (field: keyof CheckoutForm, value: string) =>
                 <img src={logoImage} alt="Myoko Music record" className="record-spin block aspect-square w-full rounded-full object-cover" />
               </div>
               <div className="absolute -bottom-5 -left-7 border border-foreground bg-secondary px-4 py-3 font-mono-brand text-[10px] uppercase tracking-[.12em] shadow-[4px_4px_0_rgba(14,13,12,.9)]">Understand it.<br /><span className="text-primary">Make your own music.</span></div>
-            </div>
-            <div className="absolute bottom-2 left-0 hidden w-40 rotate-[-7deg] border border-foreground bg-accent p-4 text-primary-foreground sm:block">
-              <p className="font-mono-brand text-[9px] uppercase leading-relaxed tracking-[.12em]">A tiny label<br />with a loud point<br />of view.</p>
             </div>
           </div>
         </section>
