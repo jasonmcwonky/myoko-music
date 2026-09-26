@@ -821,8 +821,8 @@ const setField = (field: keyof CheckoutForm, value: string) =>
           <div>
             <h2 className="max-w-3xl font-display text-5xl font-bold leading-[.95] tracking-[-.07em] sm:text-7xl">How We<br /><span className="text-primary">Started.</span></h2>
             <div className="mt-10 grid gap-8 sm:grid-cols-2">
-              <p className="text-base leading-relaxed text-foreground/70">Myoko Music started with a simple question: what if a aesthetically pleasing keychain felt as personal as the song you play when nobody is watching? 1 question turned into 5 great individuals who understood the problem and found the best possible solution ever. We are a student-built label making room for individual taste and preferences.</p>
-              <p className="text-base leading-relaxed text-foreground/70">The name is a nod to “Make Your Own Kind of Music” by Mama Cass — which is our slogan, which we do exactly that. Spread the words of aesthetic and music combined with our customized keychains.</p>
+              <p className="text-base leading-relaxed text-foreground/70">Myoko Music started with a simple question: what if a aesthetically pleasing keychain had all your favorite media stored in one place? 1 question turned into 5 great individuals who understood the problem and found the best possible solution ever. We are a student-built label making room for individual taste and preferences.</p>
+              <p className="text-base leading-relaxed text-foreground/70">The name is a nod to “Make Your Own Kind of Music” by Mama Cass — which is our inspiration and make the customer be able to amke their own kind of memories.Spread the words of aesthetic and media combined with our customized keychains.</p>
             </div>
             <div className="mt-12 border-l-2 border-primary pl-5"><p className="font-display text-2xl font-semibold leading-tight tracking-[-.03em]">“There is no wrong way to press play. Express Yourself.”</p><p className="mt-2 font-mono-brand text-[9px] uppercase tracking-[.15em] text-foreground/50">— Myoko, Jason</p></div>
           </div>
