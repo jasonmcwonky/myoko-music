@@ -475,7 +475,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
         data-testid="service-pay-keychains"
       >
         <div className="flex items-start justify-between">
-          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
             02 / AVAILABLE
           </span>
           <ArrowRight
@@ -508,7 +508,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
         data-testid="service-invite-keychains"
       >
         <div className="flex items-start justify-between">
-          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
             03 / AVAILABLE
           </span>
           <ArrowRight
@@ -541,7 +541,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
         data-testid="service-business-keychains"
       >
         <div className="flex items-start justify-between">
-          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
             04 / AVAILABLE
           </span>
           <ArrowRight
@@ -574,7 +574,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
         data-testid="service-id-keychains"
       >
         <div className="flex items-start justify-between">
-          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
             05 / AVAILABLE
           </span>
           <ArrowRight
@@ -607,7 +607,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
         data-testid="service-social-keychains"
       >
         <div className="flex items-start justify-between">
-          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
             06 / AVAILABLE
           </span>
           <ArrowRight
@@ -640,7 +640,7 @@ const setField = (field: keyof CheckoutForm, value: string) =>
         data-testid="service-memory-keychains"
       >
         <div className="flex items-start justify-between">
-          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-background/40">
+          <span className="font-mono-brand text-[9px] uppercase tracking-[.15em] text-secondary">
             07 / AVAILABLE
           </span>
           <ArrowRight
